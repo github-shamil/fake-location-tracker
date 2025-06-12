@@ -1,21 +1,19 @@
 let map = L.map("map").setView([25.276987, 51.520008], 13);
 let fakeMarker, liveMarker, routingControl;
 
-// MapTiler with ENGLISH labels (no Arabic)
-L.tileLayer("https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO", {
+// Use MapTiler tiles with English labels only
+L.tileLayer("https://api.maptiler.com/maps/basic-v2/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO", {
   attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a>',
   maxZoom: 20
 }).addTo(map);
 
-// Add fake Qatar marker
+// Add initial fake marker (Qatar)
 fakeMarker = L.marker([25.276987, 51.520008], {
   icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue.png' })
 }).addTo(map);
-
-// Remove fake marker on double click
 fakeMarker.on("dblclick", () => map.removeLayer(fakeMarker));
 
-// UI buttons
+// UI toggle
 document.getElementById("search-toggle").onclick = () => togglePanel("search-panel");
 document.getElementById("direction-toggle").onclick = () => togglePanel("direction-panel");
 document.getElementById("location-toggle").onclick = () =>
@@ -29,27 +27,29 @@ function hidePanel(id) {
   document.getElementById(id).style.display = "none";
 }
 
-// Autocomplete
+// 🔍 AUTOCOMPLETE with Photon API (free & accurate)
 function enableAutocomplete(inputId, suggestionId) {
   const input = document.getElementById(inputId);
   const suggestionBox = document.getElementById(suggestionId);
-  input.addEventListener("input", () => {
-    const query = input.value.trim();
-    if (!query) return suggestionBox.innerHTML = "";
 
-    L.esri.Geocoding.geocode().text(query).language("en").run((err, results) => {
-      if (err || !results.results.length) return;
-      suggestionBox.innerHTML = "";
-      results.results.forEach(r => {
-        const div = document.createElement("div");
-        div.className = "suggestion";
-        div.textContent = r.text;
-        div.onclick = () => {
-          input.value = r.text;
-          suggestionBox.innerHTML = "";
-        };
-        suggestionBox.appendChild(div);
-      });
+  input.addEventListener("input", async () => {
+    const query = input.value.trim();
+    if (!query) return (suggestionBox.innerHTML = "");
+
+    const res = await fetch(`https://photon.komoot.io/api/?q=${query}&lang=en`);
+    const data = await res.json();
+    suggestionBox.innerHTML = "";
+    data.features.slice(0, 5).forEach((feature) => {
+      const div = document.createElement("div");
+      div.className = "suggestion";
+      div.textContent = feature.properties.name + ", " + feature.properties.country;
+      div.onclick = () => {
+        input.value = feature.properties.name;
+        input.dataset.lat = feature.geometry.coordinates[1];
+        input.dataset.lon = feature.geometry.coordinates[0];
+        suggestionBox.innerHTML = "";
+      };
+      suggestionBox.appendChild(div);
     });
   });
 }
@@ -57,53 +57,49 @@ enableAutocomplete("searchBox", "searchSuggestions");
 enableAutocomplete("start", "startSuggestions");
 enableAutocomplete("end", "endSuggestions");
 
-// Search place and mark
+// 📍 Search & Mark
 function searchPlace() {
-  const query = document.getElementById("searchBox").value.trim();
-  if (!query) return;
-  L.esri.Geocoding.geocode().text(query).language("en").run((err, res) => {
-    if (!res.results.length) return;
-    const latlng = res.results[0].latlng;
-    if (fakeMarker) map.removeLayer(fakeMarker);
-    fakeMarker = L.marker(latlng, {
-      icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
-    }).addTo(map);
-    map.setView(latlng, 14);
-  });
+  const input = document.getElementById("searchBox");
+  const lat = input.dataset.lat;
+  const lon = input.dataset.lon;
+
+  if (!lat || !lon) return alert("Please select a place from suggestions.");
+  if (fakeMarker) map.removeLayer(fakeMarker);
+
+  const coords = [parseFloat(lat), parseFloat(lon)];
+  fakeMarker = L.marker(coords, {
+    icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
+  }).addTo(map);
+  map.setView(coords, 15);
 }
 
-// Get directions between 2 places
+// 🛣️ Get Directions
 function getDirections() {
-  const start = document.getElementById("start").value.trim();
-  const end = document.getElementById("end").value.trim();
-  if (!start || !end) return;
+  const startInput = document.getElementById("start");
+  const endInput = document.getElementById("end");
+
+  if (!startInput.dataset.lat || !endInput.dataset.lat) return alert("Select both places from suggestions.");
+
+  const startCoords = [parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon)];
+  const endCoords = [parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon)];
 
   if (routingControl) map.removeControl(routingControl);
 
-  L.esri.Geocoding.geocode().text(start).language("en").run((err1, startRes) => {
-    if (!startRes.results.length) return;
-    const startLatLng = startRes.results[0].latlng;
-
-    L.esri.Geocoding.geocode().text(end).language("en").run((err2, endRes) => {
-      if (!endRes.results.length) return;
-      const endLatLng = endRes.results[0].latlng;
-
-      routingControl = L.Routing.control({
-        waypoints: [startLatLng, endLatLng],
-        createMarker: (i, wp) => {
-          return L.marker(wp.latLng, {
-            icon: L.icon({
-              iconUrl: i === 0 ? "assets/live-location.svg" : "https://maps.gstatic.com/mapfiles/ms2/micons/red.png",
-              iconSize: [32, 32]
-            })
-          });
-        }
-      }).addTo(map);
-    });
-  });
+  routingControl = L.Routing.control({
+    waypoints: [L.latLng(...startCoords), L.latLng(...endCoords)],
+    lineOptions: { styles: [{ color: "#1976d2", weight: 5 }] },
+    createMarker: (i, wp) => {
+      return L.marker(wp.latLng, {
+        icon: L.icon({
+          iconUrl: i === 0 ? "assets/live-location.svg" : "https://maps.gstatic.com/mapfiles/ms2/micons/red.png",
+          iconSize: [32, 32]
+        })
+      });
+    }
+  }).addTo(map);
 }
 
-// Show current GPS location
+// 📡 Show Live GPS Location
 function showLiveLocation(position) {
   const coords = [position.coords.latitude, position.coords.longitude];
   if (liveMarker) map.removeLayer(liveMarker);
