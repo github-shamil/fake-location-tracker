@@ -1,25 +1,18 @@
 let map = L.map("map").setView([25.276987, 51.520008], 13);
-let fakeMarker;
-let liveMarker;
-let routingControl;
+let fakeMarker, liveMarker, routingControl;
 
+// Add tile layer
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19
+  maxZoom: 19,
 }).addTo(map);
 
-// Initial fake marker
+// Add fake default marker
 fakeMarker = L.marker([25.276987, 51.520008], {
   icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue.png' })
 }).addTo(map);
-fakeMarker.on('dblclick', () => map.removeLayer(fakeMarker));
+fakeMarker.on("dblclick", () => map.removeLayer(fakeMarker));
 
-// Toggle UI
-document.getElementById("search-toggle").onclick = () => togglePanel("search-panel");
-document.getElementById("direction-toggle").onclick = () => togglePanel("direction-panel");
-document.getElementById("location-toggle").onclick = () => {
-  navigator.geolocation.getCurrentPosition(showLiveLocation, () => alert("Permission denied or unavailable."));
-};
-
+// UI toggle
 function togglePanel(id) {
   const panel = document.getElementById(id);
   panel.style.display = panel.style.display === "none" ? "block" : "none";
@@ -27,30 +20,36 @@ function togglePanel(id) {
 function hidePanel(id) {
   document.getElementById(id).style.display = "none";
 }
+document.getElementById("search-toggle").onclick = () => togglePanel("search-panel");
+document.getElementById("direction-toggle").onclick = () => togglePanel("direction-panel");
+document.getElementById("location-toggle").onclick = () => {
+  navigator.geolocation.getCurrentPosition(showLiveLocation, () => alert("Location access denied."));
+};
 
-// Autocomplete for inputs
-function setupAutocomplete(inputId, suggestionId) {
+// Autocomplete setup
+function setupAutocomplete(inputId, suggestionsId) {
   const input = document.getElementById(inputId);
-  const suggestionBox = document.getElementById(suggestionId);
+  const box = document.getElementById(suggestionsId);
+
   input.addEventListener("input", () => {
-    const query = input.value;
-    if (!query) return (suggestionBox.innerHTML = "");
+    const text = input.value;
+    if (!text) return (box.innerHTML = "");
 
     L.esri.Geocoding.geocode()
-      .text(query)
-      .language("en")
-      .run((err, results) => {
-        if (err || !results?.results?.length) return;
-        suggestionBox.innerHTML = "";
-        results.results.forEach(res => {
-          const item = document.createElement("div");
-          item.className = "suggestion";
-          item.textContent = res.text;
-          item.onclick = () => {
-            input.value = res.text;
-            suggestionBox.innerHTML = "";
+      .text(text)
+      .language("en") // Always in English
+      .run((err, result) => {
+        if (err || !result.results.length) return;
+        box.innerHTML = "";
+        result.results.forEach(r => {
+          const div = document.createElement("div");
+          div.textContent = r.text;
+          div.className = "suggestion";
+          div.onclick = () => {
+            input.value = r.text;
+            box.innerHTML = "";
           };
-          suggestionBox.appendChild(item);
+          box.appendChild(div);
         });
       });
   });
@@ -59,23 +58,20 @@ setupAutocomplete("searchBox", "searchSuggestions");
 setupAutocomplete("start", "startSuggestions");
 setupAutocomplete("end", "endSuggestions");
 
-// Search
+// Search location
 function searchPlace() {
   const query = document.getElementById("searchBox").value;
   if (!query) return;
-  L.esri.Geocoding.geocode()
-    .text(query)
-    .language("en")
-    .run((err, results) => {
-      if (results?.results?.length) {
-        const latlng = results.results[0].latlng;
-        if (fakeMarker) map.removeLayer(fakeMarker);
-        fakeMarker = L.marker(latlng, {
-          icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
-        }).addTo(map);
-        map.setView(latlng, 15);
-      }
-    });
+  L.esri.Geocoding.geocode().text(query).language("en").run((err, res) => {
+    if (res?.results?.length) {
+      const latlng = res.results[0].latlng;
+      map.setView(latlng, 15);
+      if (fakeMarker) map.removeLayer(fakeMarker);
+      fakeMarker = L.marker(latlng, {
+        icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
+      }).addTo(map);
+    }
+  });
 }
 
 // Directions
@@ -85,31 +81,37 @@ function getDirections() {
   if (!start || !end) return;
   if (routingControl) map.removeControl(routingControl);
 
-  L.esri.Geocoding.geocode().text(start).language("en").run((err, sRes) => {
+  L.esri.Geocoding.geocode().text(start).language("en").run((err1, sRes) => {
     if (!sRes?.results?.length) return;
-    const sLatLng = sRes.results[0].latlng;
     L.esri.Geocoding.geocode().text(end).language("en").run((err2, eRes) => {
       if (!eRes?.results?.length) return;
-      const eLatLng = eRes.results[0].latlng;
 
-      const startIcon = L.icon({ iconUrl: 'assets/live-location.svg', iconSize: [32, 32] });
-      const endIcon = L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' });
+      const sLatLng = sRes.results[0].latlng;
+      const eLatLng = eRes.results[0].latlng;
 
       routingControl = L.Routing.control({
         waypoints: [sLatLng, eLatLng],
-        createMarker: function (i, wp) {
-          return L.marker(wp.latLng, { icon: i === 0 ? startIcon : endIcon });
+        createMarker: (i, wp) => {
+          return L.marker(wp.latLng, {
+            icon: L.icon({
+              iconUrl: i === 0 ? 'assets/live-location.svg' : 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png',
+              iconSize: [32, 32]
+            })
+          });
         }
       }).addTo(map);
     });
   });
 }
 
-// Show Live Location
+// Live location
 function showLiveLocation(pos) {
   const latlng = [pos.coords.latitude, pos.coords.longitude];
   if (liveMarker) map.removeLayer(liveMarker);
-  const icon = L.icon({ iconUrl: "assets/live-location.svg", iconSize: [32, 32] });
+  const icon = L.icon({
+    iconUrl: "assets/live-location.svg",
+    iconSize: [32, 32]
+  });
   liveMarker = L.marker(latlng, { icon }).addTo(map);
   map.setView(latlng, 15);
 }
