@@ -3,22 +3,22 @@ let fakeMarker;
 let liveMarker;
 let routingControl;
 
-// Map Layer
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19
 }).addTo(map);
 
-// Fake Marker on load
+// Initial fake marker
 fakeMarker = L.marker([25.276987, 51.520008], {
   icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue.png' })
 }).addTo(map);
 fakeMarker.on('dblclick', () => map.removeLayer(fakeMarker));
 
-// Toggle panels
+// Toggle UI
 document.getElementById("search-toggle").onclick = () => togglePanel("search-panel");
 document.getElementById("direction-toggle").onclick = () => togglePanel("direction-panel");
-document.getElementById("location-toggle").onclick = () =>
-  navigator.geolocation.getCurrentPosition(showLiveLocation, () => alert("Location access denied."));
+document.getElementById("location-toggle").onclick = () => {
+  navigator.geolocation.getCurrentPosition(showLiveLocation, () => alert("Permission denied or unavailable."));
+};
 
 function togglePanel(id) {
   const panel = document.getElementById(id);
@@ -28,82 +28,84 @@ function hidePanel(id) {
   document.getElementById(id).style.display = "none";
 }
 
-const geocoder = L.esri.Geocoding.geocodeService();
-
-// =================== 🔍 Autocomplete Functions =====================
-function autocomplete(inputId, suggestionId) {
+// Autocomplete for inputs
+function setupAutocomplete(inputId, suggestionId) {
   const input = document.getElementById(inputId);
   const suggestionBox = document.getElementById(suggestionId);
   input.addEventListener("input", () => {
     const query = input.value;
-    if (!query) {
-      suggestionBox.innerHTML = "";
-      return;
-    }
-    L.esri.Geocoding.geocode().text(query).language("en").run((err, results) => {
-      if (err || !results.results.length) return;
-      suggestionBox.innerHTML = "";
-      results.results.forEach(r => {
-        const div = document.createElement("div");
-        div.textContent = r.text;
-        div.className = "suggestion";
-        div.onclick = () => {
-          input.value = r.text;
-          suggestionBox.innerHTML = "";
-        };
-        suggestionBox.appendChild(div);
+    if (!query) return (suggestionBox.innerHTML = "");
+
+    L.esri.Geocoding.geocode()
+      .text(query)
+      .language("en")
+      .run((err, results) => {
+        if (err || !results?.results?.length) return;
+        suggestionBox.innerHTML = "";
+        results.results.forEach(res => {
+          const item = document.createElement("div");
+          item.className = "suggestion";
+          item.textContent = res.text;
+          item.onclick = () => {
+            input.value = res.text;
+            suggestionBox.innerHTML = "";
+          };
+          suggestionBox.appendChild(item);
+        });
       });
-    });
   });
 }
-autocomplete("searchBox", "searchSuggestions");
-autocomplete("start", "startSuggestions");
-autocomplete("end", "endSuggestions");
+setupAutocomplete("searchBox", "searchSuggestions");
+setupAutocomplete("start", "startSuggestions");
+setupAutocomplete("end", "endSuggestions");
 
-// ================== 📍 Search Location ==================
+// Search
 function searchPlace() {
   const query = document.getElementById("searchBox").value;
   if (!query) return;
-
-  L.esri.Geocoding.geocode().text(query).language("en").run((err, results) => {
-    if (results?.results?.length > 0) {
-      const latlng = results.results[0].latlng;
-      map.setView(latlng, 14);
-      if (fakeMarker) map.removeLayer(fakeMarker);
-      fakeMarker = L.marker(latlng, {
-        icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
-      }).addTo(map);
-    }
-  });
+  L.esri.Geocoding.geocode()
+    .text(query)
+    .language("en")
+    .run((err, results) => {
+      if (results?.results?.length) {
+        const latlng = results.results[0].latlng;
+        if (fakeMarker) map.removeLayer(fakeMarker);
+        fakeMarker = L.marker(latlng, {
+          icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
+        }).addTo(map);
+        map.setView(latlng, 15);
+      }
+    });
 }
 
-// ================== 🚘 Get Directions ==================
+// Directions
 function getDirections() {
   const start = document.getElementById("start").value;
   const end = document.getElementById("end").value;
+  if (!start || !end) return;
   if (routingControl) map.removeControl(routingControl);
 
-  L.esri.Geocoding.geocode().text(start).language("en").run((err, startRes) => {
-    if (!startRes.results.length) return;
-    L.esri.Geocoding.geocode().text(end).language("en").run((err, endRes) => {
-      if (!endRes.results.length) return;
-      const startLatLng = startRes.results[0].latlng;
-      const endLatLng = endRes.results[0].latlng;
+  L.esri.Geocoding.geocode().text(start).language("en").run((err, sRes) => {
+    if (!sRes?.results?.length) return;
+    const sLatLng = sRes.results[0].latlng;
+    L.esri.Geocoding.geocode().text(end).language("en").run((err2, eRes) => {
+      if (!eRes?.results?.length) return;
+      const eLatLng = eRes.results[0].latlng;
 
-      const blueDot = L.icon({ iconUrl: 'assets/live-location.svg', iconSize: [32, 32] });
-      const redMark = L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' });
+      const startIcon = L.icon({ iconUrl: 'assets/live-location.svg', iconSize: [32, 32] });
+      const endIcon = L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' });
 
       routingControl = L.Routing.control({
-        waypoints: [startLatLng, endLatLng],
+        waypoints: [sLatLng, eLatLng],
         createMarker: function (i, wp) {
-          return L.marker(wp.latLng, { icon: i === 0 ? blueDot : redMark });
+          return L.marker(wp.latLng, { icon: i === 0 ? startIcon : endIcon });
         }
       }).addTo(map);
     });
   });
 }
 
-// ================== 📡 Show Live Location ==================
+// Show Live Location
 function showLiveLocation(pos) {
   const latlng = [pos.coords.latitude, pos.coords.longitude];
   if (liveMarker) map.removeLayer(liveMarker);
