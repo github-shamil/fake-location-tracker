@@ -101,10 +101,9 @@ input[type="text"] {
   border-radius: 8px;
   max-height: 150px;
   overflow-y: auto;
-  background: #fff;
-  margin-top: 4px;
+  background: white;
   font-size: 14px;
-  z-index: 999;
+  z-index: 1000;
 }
 
 .suggestion {
