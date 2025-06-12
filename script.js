@@ -1,23 +1,25 @@
 let map = L.map("map").setView([25.276987, 51.520008], 13);
 let fakeMarker, liveMarker, routingControl;
 
-// Use MapTiler tiles with English labels (not Arabic)
-L.tileLayer(`https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO`, {
+// MapTiler with ENGLISH labels (no Arabic)
+L.tileLayer("https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO", {
   attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a>',
   maxZoom: 20
 }).addTo(map);
 
-// Fake marker on Qatar
+// Add fake Qatar marker
 fakeMarker = L.marker([25.276987, 51.520008], {
   icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue.png' })
 }).addTo(map);
+
+// Remove fake marker on double click
 fakeMarker.on("dblclick", () => map.removeLayer(fakeMarker));
 
-// Toggle buttons
+// UI buttons
 document.getElementById("search-toggle").onclick = () => togglePanel("search-panel");
 document.getElementById("direction-toggle").onclick = () => togglePanel("direction-panel");
 document.getElementById("location-toggle").onclick = () =>
-  navigator.geolocation.getCurrentPosition(showLiveLocation, () => alert("Location permission denied"));
+  navigator.geolocation.getCurrentPosition(showLiveLocation, () => alert("Location access denied"));
 
 function togglePanel(id) {
   const panel = document.getElementById(id);
@@ -27,69 +29,68 @@ function hidePanel(id) {
   document.getElementById(id).style.display = "none";
 }
 
-// Autocomplete setup
-function setupAutocomplete(inputId, suggestionId) {
+// Autocomplete
+function enableAutocomplete(inputId, suggestionId) {
   const input = document.getElementById(inputId);
-  const box = document.getElementById(suggestionId);
-
+  const suggestionBox = document.getElementById(suggestionId);
   input.addEventListener("input", () => {
-    const query = input.value;
-    if (!query) return box.innerHTML = "";
+    const query = input.value.trim();
+    if (!query) return suggestionBox.innerHTML = "";
 
     L.esri.Geocoding.geocode().text(query).language("en").run((err, results) => {
       if (err || !results.results.length) return;
-      box.innerHTML = "";
+      suggestionBox.innerHTML = "";
       results.results.forEach(r => {
         const div = document.createElement("div");
-        div.textContent = r.text;
         div.className = "suggestion";
+        div.textContent = r.text;
         div.onclick = () => {
           input.value = r.text;
-          box.innerHTML = "";
+          suggestionBox.innerHTML = "";
         };
-        box.appendChild(div);
+        suggestionBox.appendChild(div);
       });
     });
   });
 }
-setupAutocomplete("searchBox", "searchSuggestions");
-setupAutocomplete("start", "startSuggestions");
-setupAutocomplete("end", "endSuggestions");
+enableAutocomplete("searchBox", "searchSuggestions");
+enableAutocomplete("start", "startSuggestions");
+enableAutocomplete("end", "endSuggestions");
 
-// Search functionality
+// Search place and mark
 function searchPlace() {
-  const query = document.getElementById("searchBox").value;
+  const query = document.getElementById("searchBox").value.trim();
   if (!query) return;
   L.esri.Geocoding.geocode().text(query).language("en").run((err, res) => {
-    if (res.results.length) {
-      const latlng = res.results[0].latlng;
-      map.setView(latlng, 15);
-      if (fakeMarker) map.removeLayer(fakeMarker);
-      fakeMarker = L.marker(latlng, {
-        icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
-      }).addTo(map);
-    }
+    if (!res.results.length) return;
+    const latlng = res.results[0].latlng;
+    if (fakeMarker) map.removeLayer(fakeMarker);
+    fakeMarker = L.marker(latlng, {
+      icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
+    }).addTo(map);
+    map.setView(latlng, 14);
   });
 }
 
-// Get directions
+// Get directions between 2 places
 function getDirections() {
-  const start = document.getElementById("start").value;
-  const end = document.getElementById("end").value;
+  const start = document.getElementById("start").value.trim();
+  const end = document.getElementById("end").value.trim();
   if (!start || !end) return;
+
   if (routingControl) map.removeControl(routingControl);
 
-  L.esri.Geocoding.geocode().text(start).language("en").run((err1, sRes) => {
-    if (!sRes.results.length) return;
-    L.esri.Geocoding.geocode().text(end).language("en").run((err2, eRes) => {
-      if (!eRes.results.length) return;
+  L.esri.Geocoding.geocode().text(start).language("en").run((err1, startRes) => {
+    if (!startRes.results.length) return;
+    const startLatLng = startRes.results[0].latlng;
 
-      const sLatLng = sRes.results[0].latlng;
-      const eLatLng = eRes.results[0].latlng;
+    L.esri.Geocoding.geocode().text(end).language("en").run((err2, endRes) => {
+      if (!endRes.results.length) return;
+      const endLatLng = endRes.results[0].latlng;
 
       routingControl = L.Routing.control({
-        waypoints: [sLatLng, eLatLng],
-        createMarker: function (i, wp) {
+        waypoints: [startLatLng, endLatLng],
+        createMarker: (i, wp) => {
           return L.marker(wp.latLng, {
             icon: L.icon({
               iconUrl: i === 0 ? "assets/live-location.svg" : "https://maps.gstatic.com/mapfiles/ms2/micons/red.png",
@@ -102,11 +103,12 @@ function getDirections() {
   });
 }
 
-// Show user live location
+// Show current GPS location
 function showLiveLocation(position) {
-  const latlng = [position.coords.latitude, position.coords.longitude];
+  const coords = [position.coords.latitude, position.coords.longitude];
   if (liveMarker) map.removeLayer(liveMarker);
-  const icon = L.icon({ iconUrl: "assets/live-location.svg", iconSize: [32, 32] });
-  liveMarker = L.marker(latlng, { icon }).addTo(map);
-  map.setView(latlng, 15);
+  liveMarker = L.marker(coords, {
+    icon: L.icon({ iconUrl: "assets/live-location.svg", iconSize: [32, 32] })
+  }).addTo(map);
+  map.setView(coords, 15);
 }
