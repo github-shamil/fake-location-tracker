@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake Location Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+</head>
+<body>
+  <div id="map"></div>
+  <button class="toggle-btn" id="search-toggle">
+    <img src="assets/search-icon.svg" alt="Search" />
+  </button>
+  <button class="toggle-btn" id="direction-toggle">
+    <img src="assets/direction-icon.svg" alt="Direction" />
+  </button>
+  <button class="toggle-btn" id="location-toggle" title="Show My Location">📍</button>
+
+  <div class="panel" id="search-panel">
+    <button class="close-btn" onclick="hidePanel('search-panel')">✖</button>
+    <input type="text" id="searchBox" placeholder="Search place..." />
+    <ul id="searchSuggestions" class="suggestions"></ul>
+    <button onclick="executeSearch()">Search</button>
+  </div>
+
+  <div class="panel direction-panel" id="direction-panel">
+    <button class="close-btn" onclick="hidePanel('direction-panel')">✖</button>
+    <input type="text" id="start" placeholder="Start location" />
+    <ul id="startSuggestions" class="suggestions"></ul>
+    <input type="text" id="end" placeholder="Destination" />
+    <ul id="endSuggestions" class="suggestions"></ul>
+    <button id="getDirection">Get Direction</button>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
