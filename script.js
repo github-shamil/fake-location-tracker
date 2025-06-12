@@ -2,7 +2,7 @@
 let map = L.map('map').setView([25.2882, 51.5485], 15);
 let marker = L.marker([25.2882, 51.5485], { draggable: false }).addTo(map);
 
-L.tileLayer('https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=YOUR_MAPTILER_KEY', {
+L.tileLayer('https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO', {
   attribution: '&copy; MapTiler & OpenStreetMap contributors',
 }).addTo(map);
 
