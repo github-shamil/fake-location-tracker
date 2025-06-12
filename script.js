@@ -1,103 +1,113 @@
-const map = L.map('map').setView([25.276987, 51.520008], 14);
-L.tileLayer('https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO', {
-  attribution: '&copy; MapTiler & OpenStreetMap contributors'
+let map = L.map("map").setView([25.276987, 51.520008], 13);
+let fakeMarker;
+let liveMarker;
+let routingControl;
+
+// Map Layer
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19
 }).addTo(map);
 
-let fakeMarker = L.marker([25.276987, 51.520008], { draggable: false }).addTo(map);
+// Fake Marker on load
+fakeMarker = L.marker([25.276987, 51.520008], {
+  icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue.png' })
+}).addTo(map);
 fakeMarker.on('dblclick', () => map.removeLayer(fakeMarker));
 
-const toggle = (id, show) => {
-  document.getElementById(id).style.display = show ? 'block' : 'none';
-};
+// Toggle panels
+document.getElementById("search-toggle").onclick = () => togglePanel("search-panel");
+document.getElementById("direction-toggle").onclick = () => togglePanel("direction-panel");
+document.getElementById("location-toggle").onclick = () =>
+  navigator.geolocation.getCurrentPosition(showLiveLocation, () => alert("Location access denied."));
 
-document.getElementById('search-toggle').onclick = () => {
-  toggle('search-panel', true);
-  toggle('direction-panel', false);
-};
-document.getElementById('direction-toggle').onclick = () => {
-  toggle('direction-panel', true);
-  toggle('search-panel', false);
-};
-document.getElementById('location-toggle').onclick = () => {
-  map.locate({ setView: true, maxZoom: 16 });
-};
-map.on('locationfound', (e) => {
-  L.circle(e.latlng, {
-    radius: 10,
-    color: 'blue',
-    fillColor: '#30f',
-    fillOpacity: 0.7
-  }).addTo(map);
-});
-
+function togglePanel(id) {
+  const panel = document.getElementById(id);
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+}
 function hidePanel(id) {
-  toggle(id, false);
+  document.getElementById(id).style.display = "none";
 }
 
-function setSuggestionListeners(inputId, ulId) {
+const geocoder = L.esri.Geocoding.geocodeService();
+
+// =================== 🔍 Autocomplete Functions =====================
+function autocomplete(inputId, suggestionId) {
   const input = document.getElementById(inputId);
-  const ul = document.getElementById(ulId);
-  input.addEventListener('input', () => {
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${input.value}`)
-      .then(res => res.json())
-      .then(data => {
-        ul.innerHTML = '';
-        data.slice(0, 5).forEach(place => {
-          const li = document.createElement('li');
-          li.textContent = place.display_name;
-          li.onclick = () => {
-            input.value = place.display_name;
-            ul.innerHTML = '';
-          };
-          ul.appendChild(li);
-        });
+  const suggestionBox = document.getElementById(suggestionId);
+  input.addEventListener("input", () => {
+    const query = input.value;
+    if (!query) {
+      suggestionBox.innerHTML = "";
+      return;
+    }
+    L.esri.Geocoding.geocode().text(query).language("en").run((err, results) => {
+      if (err || !results.results.length) return;
+      suggestionBox.innerHTML = "";
+      results.results.forEach(r => {
+        const div = document.createElement("div");
+        div.textContent = r.text;
+        div.className = "suggestion";
+        div.onclick = () => {
+          input.value = r.text;
+          suggestionBox.innerHTML = "";
+        };
+        suggestionBox.appendChild(div);
       });
-  });
-}
-
-setSuggestionListeners('searchBox', 'searchSuggestions');
-setSuggestionListeners('start', 'startSuggestions');
-setSuggestionListeners('end', 'endSuggestions');
-
-function executeSearch() {
-  const query = document.getElementById('searchBox').value;
-  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data[0]) {
-        const latlng = [data[0].lat, data[0].lon];
-        if (fakeMarker) map.removeLayer(fakeMarker);
-        fakeMarker = L.marker(latlng).addTo(map);
-        map.setView(latlng, 14);
-      }
     });
+  });
+}
+autocomplete("searchBox", "searchSuggestions");
+autocomplete("start", "startSuggestions");
+autocomplete("end", "endSuggestions");
+
+// ================== 📍 Search Location ==================
+function searchPlace() {
+  const query = document.getElementById("searchBox").value;
+  if (!query) return;
+
+  L.esri.Geocoding.geocode().text(query).language("en").run((err, results) => {
+    if (results?.results?.length > 0) {
+      const latlng = results.results[0].latlng;
+      map.setView(latlng, 14);
+      if (fakeMarker) map.removeLayer(fakeMarker);
+      fakeMarker = L.marker(latlng, {
+        icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
+      }).addTo(map);
+    }
+  });
 }
 
-let routingControl;
-document.getElementById('getDirection').onclick = () => {
-  const start = document.getElementById('start').value;
-  const end = document.getElementById('end').value;
+// ================== 🚘 Get Directions ==================
+function getDirections() {
+  const start = document.getElementById("start").value;
+  const end = document.getElementById("end").value;
+  if (routingControl) map.removeControl(routingControl);
 
-  if (!start || !end) return;
+  L.esri.Geocoding.geocode().text(start).language("en").run((err, startRes) => {
+    if (!startRes.results.length) return;
+    L.esri.Geocoding.geocode().text(end).language("en").run((err, endRes) => {
+      if (!endRes.results.length) return;
+      const startLatLng = startRes.results[0].latlng;
+      const endLatLng = endRes.results[0].latlng;
 
-  Promise.all([
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${start}`).then(res => res.json()),
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${end}`).then(res => res.json())
-  ]).then(([startData, endData]) => {
-    if (!startData[0] || !endData[0]) return;
+      const blueDot = L.icon({ iconUrl: 'assets/live-location.svg', iconSize: [32, 32] });
+      const redMark = L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' });
 
-    const startLatLng = L.latLng(startData[0].lat, startData[0].lon);
-    const endLatLng = L.latLng(endData[0].lat, endData[0].lon);
-
-    if (routingControl) map.removeControl(routingControl);
-
-    routingControl = L.Routing.control({
-      waypoints: [startLatLng, endLatLng],
-      router: L.Routing.osrmv1(),
-      createMarker: () => null
-    }).addTo(map);
-
-    if (fakeMarker) map.removeLayer(fakeMarker);
-    fakeMarker = L.marker(endLatLng).addTo(map);
+      routingControl = L.Routing.control({
+        waypoints: [startLatLng, endLatLng],
+        createMarker: function (i, wp) {
+          return L.marker(wp.latLng, { icon: i === 0 ? blueDot : redMark });
+        }
+      }).addTo(map);
+    });
   });
-};
+}
+
+// ================== 📡 Show Live Location ==================
+function showLiveLocation(pos) {
+  const latlng = [pos.coords.latitude, pos.coords.longitude];
+  if (liveMarker) map.removeLayer(liveMarker);
+  const icon = L.icon({ iconUrl: "assets/live-location.svg", iconSize: [32, 32] });
+  liveMarker = L.marker(latlng, { icon }).addTo(map);
+  map.setView(latlng, 15);
+}
