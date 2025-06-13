@@ -208,7 +208,7 @@ document.getElementById("weather-toggle").onclick = () => {
 
 // 🌦️ Fetch Weather
 async function fetchWeather(lat, lon) {
-  const apiKey = "YOUR_OPENWEATHERMAP_API_KEY"; // <-- Replace with real key
+  const apiKey = "71aec132cf2764d6ea577d3616629a9b"; // <-- Replace with real key
   const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
   const res = await fetch(url);
   const data = await res.json();
