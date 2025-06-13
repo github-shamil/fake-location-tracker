@@ -2,44 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Live Location</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Location</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="assets/location-icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="assets/location-icon.svg" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAFakeKeyForNow&libraries=places"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 </head>
 <body>
-  <div id="map"></div>
-
-  <!-- Floating Controls -->
-  <img src="assets/search-icon.svg" class="floating-icon right-center" id="search-toggle" title="Search" />
-  <img src="assets/direction-icon.svg" class="floating-icon right-bottom" id="direction-toggle" title="Directions" />
-  <img src="assets/live-location.svg" class="floating-icon left-bottom" id="live-location" title="Live Location" />
-  <img src="assets/traffic-icon.svg" class="floating-icon right-top" title="Traffic" />
-  <img src="assets/weather-icon.svg" class="floating-icon left-top" title="Weather" />
-
-  <!-- Search Box -->
-  <div class="floating-search" id="search-box">
-    <input type="text" id="search-input" placeholder="Search place..." />
-    <button id="search-btn">Search</button>
-    <button id="close-search">✖</button>
+  <!-- Floating Buttons -->
+  <div class="floating-buttons">
+    <img src="assets/search-icon.svg" id="search-toggle" />
+    <img src="assets/direction-icon.svg" id="direction-toggle" />
+    <img src="assets/live-location.svg" id="live-location" />
+    <img src="assets/satellite-icon.svg" id="satellite-toggle" />
   </div>
 
-  <!-- Direction Panel -->
+  <!-- Floating Search -->
+  <div class="floating-search" id="search-box">
+    <input type="text" id="search-input" placeholder="Search a place..." autocomplete="off" />
+    <button id="search-button">Search</button>
+    <img src="assets/close-icon.svg" class="close-btn" id="close-search" />
+  </div>
+
+  <!-- Direction Box -->
   <div class="floating-direction" id="direction-panel">
     <input type="text" id="start" placeholder="Start location" />
-    <input type="text" id="end" placeholder="Destination" />
-    <button id="route-btn">Get Directions</button>
-    <button id="close-direction">✖</button>
+    <input type="text" id="end" placeholder="End location" />
+    <button id="get-route">Get Direction</button>
+    <img src="assets/close-icon.svg" class="close-btn" id="close-direction" />
   </div>
 
+  <!-- Map -->
+  <div id="map"></div>
+
   <!-- Scripts -->
-  <script src="script.js"></script>
   <script src="geo-capture.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
