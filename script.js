@@ -50,6 +50,20 @@ function showLiveLocation(position) {
   fetchWeather(coords[0], coords[1]);
 }
 
+// ✅ 🔄 Toggle Search and Direction Panels
+const directionPanel = document.getElementById('direction-panel');
+const searchBar = document.querySelector('.floating-search');
+
+document.getElementById('direction-toggle').addEventListener('click', () => {
+  const isVisible = directionPanel.style.display === 'block';
+  directionPanel.style.display = isVisible ? 'none' : 'block';
+});
+
+document.getElementById('search-toggle').addEventListener('click', () => {
+  const isVisible = searchBar.style.display === 'block';
+  searchBar.style.display = isVisible ? 'none' : 'block';
+});
+
 // 🔍 Autocomplete for Inputs
 function enableAutocomplete(inputId, suggestionId) {
   const input = document.getElementById(inputId);
@@ -62,26 +76,25 @@ function enableAutocomplete(inputId, suggestionId) {
     const res = await fetch(`https://photon.komoot.io/api/?q=${query}&lang=en`);
     const data = await res.json();
     suggestionBox.innerHTML = "";
- data.features.slice(0, 5).forEach((feature) => {
-  const div = document.createElement("div");
-  div.className = "suggestion";
-  div.textContent = feature.properties.name + ", " + feature.properties.country;
+    data.features.slice(0, 5).forEach((feature) => {
+      const div = document.createElement("div");
+      div.className = "suggestion";
+      div.textContent = feature.properties.name + ", " + feature.properties.country;
 
-  function selectPlace() {
-    input.value = feature.properties.name;
-    input.dataset.lat = feature.geometry.coordinates[1];
-    input.dataset.lon = feature.geometry.coordinates[0];
-    suggestionBox.innerHTML = "";
-    input.blur();
-    saveSearch(input.value);
-  }
+      function selectPlace() {
+        input.value = feature.properties.name;
+        input.dataset.lat = feature.geometry.coordinates[1];
+        input.dataset.lon = feature.geometry.coordinates[0];
+        suggestionBox.innerHTML = "";
+        input.blur();
+        saveSearch(input.value);
+      }
 
-  div.addEventListener("click", selectPlace);
-  div.addEventListener("touchstart", selectPlace);
+      div.addEventListener("click", selectPlace);
+      div.addEventListener("touchstart", selectPlace);
 
-  suggestionBox.appendChild(div);
-});
-
+      suggestionBox.appendChild(div);
+    });
   });
 }
 
@@ -95,7 +108,6 @@ async function searchPlace() {
   let lat = input.dataset.lat;
   let lon = input.dataset.lon;
 
-  // 🔍 If no suggestion clicked (manual input), fetch coords using Photon
   if (!lat || !lon) {
     const query = input.value.trim();
     if (!query) return alert("Please enter a place.");
@@ -109,7 +121,6 @@ async function searchPlace() {
     lon = coords[0];
   }
 
-  // 🗺️ Update fake marker
   if (fakeMarker) map.removeLayer(fakeMarker);
   const coords = [parseFloat(lat), parseFloat(lon)];
   fakeMarker = L.marker(coords, {
@@ -120,7 +131,6 @@ async function searchPlace() {
   saveSearch(input.value);
 }
 
-
 // 🛣️ Directions
 async function getDirections() {
   const startInput = document.getElementById("start");
@@ -128,7 +138,6 @@ async function getDirections() {
 
   let startCoords, endCoords;
 
-  // 🧭 Handle "My Location"
   if (startInput.value.toLowerCase() === "my location") {
     navigator.geolocation.getCurrentPosition((pos) => {
       startCoords = [pos.coords.latitude, pos.coords.longitude];
@@ -166,7 +175,6 @@ async function getDirections() {
     return [coords[1], coords[0]];
   }
 }
-
 
 function buildRoute(startCoords, endCoords) {
   if (routingControl) map.removeControl(routingControl);
@@ -239,7 +247,7 @@ renderHistory();
 let tomtomTraffic;
 
 document.getElementById("traffic-toggle").onclick = () => {
-  const apiKey = "a3vv3A6LAvqLAIKmknfwzSBXEjJOpXwu"; // ⬅️ Replace with your real key
+  const apiKey = "a3vv3A6LAvqLAIKmknfwzSBXEjJOpXwu";
 
   if (!tomtomTraffic) {
     tomtomTraffic = L.tileLayer(
@@ -258,7 +266,6 @@ document.getElementById("traffic-toggle").onclick = () => {
   }
 };
 
-
 // ⛅ Weather Toggle
 document.getElementById("weather-toggle").onclick = () => {
   const box = document.getElementById("weather-box");
@@ -267,7 +274,7 @@ document.getElementById("weather-toggle").onclick = () => {
 
 // 🌦️ Fetch Weather
 async function fetchWeather(lat, lon) {
-  const apiKey = "71aec132cf2764d6ea577d3616629a9b"; // <-- Replace with real key
+  const apiKey = "71aec132cf2764d6ea577d3616629a9b";
   const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
   const res = await fetch(url);
   const data = await res.json();
@@ -279,3 +286,4 @@ async function fetchWeather(lat, lon) {
     Pressure: ${data.main.pressure} hPa</p>
   `;
 }
+
