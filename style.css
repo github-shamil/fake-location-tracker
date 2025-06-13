@@ -3,11 +3,30 @@ body, html {
   padding: 0;
   height: 100%;
   font-family: 'Roboto', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+  --panel: #ffffff;
+  --input: #f5f5f5;
+  --border: #ccc;
+}
+
+body.dark {
+  --bg: #121212;
+  --text: #f0f0f0;
+  --panel: #1e1e1e;
+  --input: #2c2c2c;
+  --border: #444;
 }
 
 #map {
   height: 100%;
   width: 100%;
+  transition: filter 0.3s ease;
 }
 
 .toggle-btn {
@@ -16,12 +35,17 @@ body, html {
   width: 48px;
   height: 48px;
   border: none;
-  background: white;
+  background: var(--panel);
   border-radius: 50%;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   cursor: pointer;
   z-index: 999;
   padding: 8px;
+  transition: background 0.3s ease;
+}
+
+.toggle-btn:hover {
+  background: var(--input);
 }
 
 #search-toggle {
@@ -34,6 +58,9 @@ body, html {
 #direction-toggle {
   bottom: 50px;
 }
+#dark-toggle {
+  bottom: 170px;
+}
 
 .toggle-btn img {
   width: 100%;
@@ -42,7 +69,7 @@ body, html {
 
 .panel {
   position: fixed;
-  background: white;
+  background: var(--panel);
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   padding: 15px;
@@ -51,16 +78,17 @@ body, html {
   flex-direction: column;
   gap: 10px;
   width: 280px;
+  transition: background 0.3s ease;
 }
 
 #search-panel {
-  top: 40%;
-  right: 75px;
-  transform: translateY(-50%);
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   display: none;
 }
 #direction-panel {
-  top: 20px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: none;
@@ -69,8 +97,11 @@ body, html {
 input[type="text"] {
   padding: 8px;
   font-size: 14px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   border-radius: 8px;
+  background: var(--input);
+  color: var(--text);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .search-btn {
@@ -97,13 +128,15 @@ input[type="text"] {
 }
 
 .suggestions {
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   border-radius: 8px;
   max-height: 150px;
   overflow-y: auto;
-  background: white;
+  background: var(--panel);
   font-size: 14px;
   z-index: 1000;
+  color: var(--text);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .suggestion {
@@ -111,5 +144,19 @@ input[type="text"] {
   cursor: pointer;
 }
 .suggestion:hover {
-  background: #f0f0f0;
+  background: var(--input);
+}
+
+@media (max-width: 768px) {
+  .panel {
+    width: 90%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .toggle-btn {
+    width: 40px;
+    height: 40px;
+    padding: 6px;
+  }
 }
