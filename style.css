@@ -1,17 +1,20 @@
+/* Full page layout reset */
 body, html {
   margin: 0;
   padding: 0;
   height: 100%;
   overflow: hidden;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
+/* Map full-screen */
 #map {
   height: 100vh;
   width: 100%;
   z-index: 0;
 }
 
+/* Floating icons (Search, Direction) */
 .icon {
   position: fixed;
   width: 48px;
@@ -19,22 +22,23 @@ body, html {
   background: white;
   border-radius: 50%;
   padding: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   z-index: 1001;
 }
 
+/* Positioning search and direction icons */
 .search-toggle {
   top: 50%;
   right: 10px;
   transform: translateY(-50%);
 }
-
 .direction-toggle {
   bottom: 10px;
   right: 10px;
 }
 
+/* Search and direction box (popup panel) */
 .floating-search,
 .floating-direction {
   position: fixed;
@@ -43,30 +47,73 @@ body, html {
   transform: translateX(-50%);
   background: #fff;
   padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
   z-index: 1002;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   width: 90%;
-  max-width: 320px;
+  max-width: 350px;
+  animation: fadeIn 0.3s ease;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-50%) scale(0.9); }
+  to { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+/* Hide class */
 .hidden {
   display: none;
 }
 
+/* Inputs and buttons */
 input, button {
   padding: 10px;
   font-size: 16px;
   width: 100%;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  outline: none;
+  box-sizing: border-box;
+}
+input:focus {
+  border-color: #007BFF;
 }
 
+/* Button styles */
 button {
-  background: #333;
+  background: #007BFF;
   color: white;
+  font-weight: bold;
   border: none;
-  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+button:hover {
+  background: #0056b3;
+}
+
+/* Suggestion dropdown under input */
+.suggestion-box {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  z-index: 9999;
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 14px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.suggestion {
+  padding: 10px;
   cursor: pointer;
+}
+.suggestion:hover {
+  background-color: #f5f5f5;
 }
