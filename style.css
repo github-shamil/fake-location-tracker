@@ -90,33 +90,33 @@ body, html {
   width: 300px;
 }
 
-/* 📱 Responsive and smart direction panel (same place as search bar) */
+/* 📦 Updated Direction Panel (Mobile-friendly, same as search) */
 #direction-panel {
-  top: 70px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: none;
-  width: 320px;
+  width: 300px;
   max-width: 90%;
   z-index: 1001;
 }
 
-/* 📱 Responsive history panel for mobile */
+/* 📱 History Panel Mobile Fix */
 @media (max-width: 768px) {
   #direction-panel {
     width: 90%;
-    top: 70px;
+    top: 20px;
   }
 
   #history-panel {
-    width: 85%;
-    right: 8%;
+    width: 90%;
+    right: 5%;
     top: 100px;
   }
 
   #historyList li {
-    font-size: 13px;
-    padding: 6px;
+    font-size: 12px;
+    padding: 5px 8px;
   }
 }
 
