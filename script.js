@@ -1,6 +1,7 @@
 // 🌍 Map Initialization
 let map = L.map("map").setView([25.276987, 51.520008], 13);
 let fakeMarker, liveMarker, routingControl;
+let isStreet = true, trafficLayer = null;
 
 // 🗺️ Tile Layers
 const streetLayer = L.tileLayer("https://api.maptiler.com/maps/basic-v2/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO", {
@@ -15,19 +16,15 @@ streetLayer.addTo(map);
 fakeMarker = L.marker([25.276987, 51.520008], {
   icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue.png' })
 }).addTo(map);
-fakeMarker.on("click", (e) => {
-  const { lat, lng } = e.latlng;
-  fakeMarker.setLatLng([lat, lng]);
-});
+fakeMarker.on("dblclick", () => map.removeLayer(fakeMarker));
 
-// ☀️/🌙 Dark Mode Toggle
+// 🌗 Dark Mode Toggle
 document.getElementById("theme-toggle").onclick = () => {
   document.body.classList.toggle("dark-mode");
   document.body.classList.toggle("light-mode");
 };
 
-// 🗺️ Layer Toggle
-let isStreet = true;
+// 🛰️ Layer Switch
 document.getElementById("layer-toggle").onclick = () => {
   if (isStreet) {
     map.removeLayer(streetLayer);
@@ -39,7 +36,7 @@ document.getElementById("layer-toggle").onclick = () => {
   isStreet = !isStreet;
 };
 
-// 📡 My Location Tracking
+// 📍 My Live Location
 document.getElementById("location-toggle").onclick = () =>
   navigator.geolocation.getCurrentPosition(showLiveLocation, () => alert("Location access denied"));
 
@@ -50,9 +47,10 @@ function showLiveLocation(position) {
     icon: L.icon({ iconUrl: "assets/live-location.svg", iconSize: [32, 32] })
   }).addTo(map);
   map.setView(coords, 15);
+  fetchWeather(coords[0], coords[1]);
 }
 
-// 🔍 Autocomplete Function
+// 🔍 Autocomplete for Inputs
 function enableAutocomplete(inputId, suggestionId) {
   const input = document.getElementById(inputId);
   const suggestionBox = document.getElementById(suggestionId);
@@ -84,7 +82,7 @@ enableAutocomplete("searchBox", "searchSuggestions");
 enableAutocomplete("start", "startSuggestions");
 enableAutocomplete("end", "endSuggestions");
 
-// 🔍 Search Place
+// 📌 Search Place
 function searchPlace() {
   const input = document.getElementById("searchBox");
   const lat = input.dataset.lat;
@@ -97,10 +95,11 @@ function searchPlace() {
     icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
   }).addTo(map);
   map.setView(coords, 15);
+  fetchWeather(coords[0], coords[1]);
   saveSearch(input.value);
 }
 
-// 🛣️ Get Directions
+// 🛣️ Directions
 function getDirections() {
   const startInput = document.getElementById("start");
   const endInput = document.getElementById("end");
@@ -111,12 +110,14 @@ function getDirections() {
     navigator.geolocation.getCurrentPosition((pos) => {
       startCoords = [pos.coords.latitude, pos.coords.longitude];
       buildRoute(startCoords, getCoords(endInput));
+      fetchWeather(...startCoords);
     });
   } else {
     if (!startInput.dataset.lat || !endInput.dataset.lat) return alert("Select both places from suggestions.");
     startCoords = getCoords(startInput);
     endCoords = getCoords(endInput);
     buildRoute(startCoords, endCoords);
+    fetchWeather(...endCoords);
   }
 }
 
@@ -149,7 +150,7 @@ function getCoords(input) {
   return [parseFloat(input.dataset.lat), parseFloat(input.dataset.lon)];
 }
 
-// 🔘 Panel Toggles
+// 📑 Panels
 document.getElementById("direction-toggle").onclick = () => togglePanel("direction-panel");
 document.getElementById("history-toggle").onclick = () => togglePanel("history-panel");
 
@@ -161,7 +162,7 @@ function hidePanel(id) {
   document.getElementById(id).style.display = "none";
 }
 
-// 📜 History
+// 📜 Search History
 function saveSearch(query) {
   let history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
   if (!history.includes(query)) {
@@ -171,7 +172,6 @@ function saveSearch(query) {
     renderHistory();
   }
 }
-
 function renderHistory() {
   const list = document.getElementById("historyList");
   let history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
@@ -187,3 +187,36 @@ function renderHistory() {
   });
 }
 renderHistory();
+
+// 🚦 Traffic Toggle
+document.getElementById("traffic-toggle").onclick = () => {
+  if (!trafficLayer) {
+    trafficLayer = L.tileLayer("https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png", {
+      attribution: "Traffic View",
+      maxZoom: 20
+    }).addTo(map);
+  } else {
+    map.hasLayer(trafficLayer) ? map.removeLayer(trafficLayer) : map.addLayer(trafficLayer);
+  }
+};
+
+// ⛅ Weather Toggle
+document.getElementById("weather-toggle").onclick = () => {
+  const box = document.getElementById("weather-box");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+};
+
+// 🌦️ Fetch Weather
+async function fetchWeather(lat, lon) {
+  const apiKey = "YOUR_OPENWEATHERMAP_API_KEY"; // <-- Replace with real key
+  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  document.getElementById("weatherTemp").innerText = `${Math.round(data.main.temp)}°C`;
+  document.getElementById("weatherCondition").innerText = data.weather[0].description;
+  document.getElementById("weatherDetails").innerHTML = `
+    <p>Humidity: ${data.main.humidity}%<br>
+    Wind: ${data.wind.speed} m/s<br>
+    Pressure: ${data.main.pressure} hPa</p>
+  `;
+}
