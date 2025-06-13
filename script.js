@@ -1,163 +1,173 @@
-// ========== MAP SETUP ==========
-const map = L.map('map').setView([25.276987, 51.520008], 13); // Qatar fake location
+// === script.js ===
 
-L.tileLayer(`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO`, {
-  tileSize: 512,
-  zoomOffset: -1,
-  attribution: '© MapTiler © OpenStreetMap',
-  crossOrigin: true,
-  lang: 'en'
+let map;
+let marker;
+let routingControl;
+const fakeLocation = [25.276987, 51.520008]; // Qatar
+
+// Map Initialization
+map = L.map('map').setView(fakeLocation, 13);
+L.tileLayer(`https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO`, {
+  attribution: 'Map data © OpenStreetMap contributors',
 }).addTo(map);
 
-// ========== FAKE MARKER ==========
-let marker = L.marker([25.276987, 51.520008]).addTo(map);
-map.on('dblclick', () => { if (marker) map.removeLayer(marker); });
+marker = L.marker(fakeLocation).addTo(map);
 
-// ========== LOADING SCREEN ==========
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    document.getElementById('preloader').style.opacity = 0;
-    setTimeout(() => document.getElementById('preloader').style.display = 'none', 500);
-  }, 1000);
-});
+// ========================== SEARCH ===========================
 
-// ========== PANEL TOGGLES ==========
 document.getElementById('search-toggle').addEventListener('click', () => {
-  const box = document.querySelector('.floating-search');
-  box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
+  document.querySelector('.floating-search').style.display = 'block';
 });
+
+document.getElementById('searchBox').addEventListener('input', async function () {
+  const query = this.value;
+  if (!query) return;
+  const res = await fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json?key=VcSgtSTkXfCbU3n3RqBO&language=en`);
+  const data = await res.json();
+  showSuggestions(data.features, 'searchSuggestions', 'searchBox');
+});
+
+function showSuggestions(results, suggestionBoxId, inputId) {
+  const container = document.getElementById(suggestionBoxId);
+  container.innerHTML = '';
+  results.slice(0, 5).forEach(place => {
+    const div = document.createElement('div');
+    div.className = 'suggestion';
+    div.innerText = place.place_name;
+    div.addEventListener('click', () => {
+      document.getElementById(inputId).value = place.place_name;
+      container.innerHTML = '';
+    });
+    container.appendChild(div);
+  });
+}
+
+function searchPlace() {
+  const input = document.getElementById('searchBox').value;
+  fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(input)}.json?key=VcSgtSTkXfCbU3n3RqBO&language=en`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.features.length) {
+        const coords = data.features[0].center;
+        map.setView([coords[1], coords[0]], 14);
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([coords[1], coords[0]]).addTo(map);
+      }
+    });
+}
+
+// ========================== DIRECTION =========================
 
 document.getElementById('direction-toggle').addEventListener('click', () => {
   const panel = document.getElementById('direction-panel');
-  panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
 });
+
+document.getElementById('start').addEventListener('input', handleAuto('startSuggestions', 'start'));
+document.getElementById('end').addEventListener('input', handleAuto('endSuggestions', 'end'));
+
+function handleAuto(boxId, inputId) {
+  return async function (e) {
+    const value = e.target.value;
+    const res = await fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(value)}.json?key=VcSgtSTkXfCbU3n3RqBO&language=en`);
+    const data = await res.json();
+    showSuggestions(data.features, boxId, inputId);
+  };
+}
+
+function getDirections() {
+  const start = document.getElementById('start').value;
+  const end = document.getElementById('end').value;
+  fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(start)}.json?key=VcSgtSTkXfCbU3n3RqBO&language=en`)
+    .then(res => res.json())
+    .then(data1 => {
+      if (!data1.features.length) return;
+      const startCoord = data1.features[0].center;
+      fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(end)}.json?key=VcSgtSTkXfCbU3n3RqBO&language=en`)
+        .then(res => res.json())
+        .then(data2 => {
+          if (!data2.features.length) return;
+          const endCoord = data2.features[0].center;
+
+          if (routingControl) map.removeControl(routingControl);
+
+          routingControl = L.Routing.control({
+            waypoints: [
+              L.latLng(startCoord[1], startCoord[0]),
+              L.latLng(endCoord[1], endCoord[0])
+            ],
+            routeWhileDragging: false
+          }).addTo(map);
+        });
+    });
+}
+
+// ========================== LOCATION ==========================
+
+document.getElementById('location-toggle').addEventListener('click', () => {
+  if (!navigator.geolocation) return alert('Geolocation not supported.');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    map.setView([lat, lon], 14);
+    if (marker) map.removeLayer(marker);
+    marker = L.marker([lat, lon]).addTo(map);
+  });
+});
+
+// ======================= WEATHER ==============================
 
 document.getElementById('weather-toggle').addEventListener('click', () => {
   const box = document.getElementById('weather-box');
   box.style.display = box.style.display === 'block' ? 'none' : 'block';
+
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=a3vv3A6LAvqLAIKmknfwzSBXEjJOpXwu&q=${lat},${lon}`);
+    const data = await res.json();
+
+    document.getElementById('weatherTemp').textContent = `${data.current.temp_c}°C`;
+    document.getElementById('weatherCondition').textContent = data.current.condition.text;
+    document.getElementById('weatherDetails').innerHTML = `
+      <p>Wind: ${data.current.wind_kph} kph</p>
+      <p>Humidity: ${data.current.humidity}%</p>
+    `;
+  });
 });
 
+// ====================== THEME TOGGLE ==========================
+
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
+  document.body.classList.toggle('light-mode');
+});
+
+// ======================= TRAFFIC ==============================
+
+document.getElementById('traffic-toggle').addEventListener('click', () => {
+  // Premium Feature - Sample only
+  alert('Traffic layer is a premium TomTom layer. Integration pending.');
+});
+
+// ======================= HISTORY ==============================
+let history = [];
 document.getElementById('history-toggle').addEventListener('click', () => {
   const panel = document.getElementById('history-panel');
   panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-});
-
-// ========== SEARCH AUTOCOMPLETE ==========
-const searchInput = document.getElementById('place-input');
-const suggestionsBox = document.getElementById('search-suggestions');
-const searchBtn = document.getElementById('search-btn');
-
-searchInput.addEventListener('input', async () => {
-  const value = searchInput.value.trim();
-  if (!value) return (suggestionsBox.style.display = 'none');
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${value}&accept-language=en`);
-  const data = await res.json();
-  suggestionsBox.innerHTML = '';
-  data.slice(0, 5).forEach((item) => {
-    const div = document.createElement('div');
-    div.textContent = item.display_name;
-    div.onclick = () => {
-      searchInput.value = item.display_name;
-      suggestionsBox.style.display = 'none';
-    };
-    suggestionsBox.appendChild(div);
+  const list = document.getElementById('historyList');
+  list.innerHTML = '';
+  history.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    list.appendChild(li);
   });
-  suggestionsBox.style.display = 'block';
 });
 
-searchBtn.addEventListener('click', async () => {
-  const place = searchInput.value.trim();
-  if (!place) return;
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${place}&accept-language=en`);
-  const data = await res.json();
-  if (data.length) {
-    const { lat, lon } = data[0];
-    map.setView([lat, lon], 13);
-    if (marker) map.removeLayer(marker);
-    marker = L.marker([lat, lon]).addTo(map);
+// Record Search History
+function recordSearch(value) {
+  if (value && !history.includes(value)) {
+    history.push(value);
   }
-});
-
-// ========== DIRECTION AUTOCOMPLETE & ROUTE ==========
-const startInput = document.getElementById('start');
-const endInput = document.getElementById('end');
-const dirBtn = document.getElementById('get-direction');
-let control;
-
-function attachAuto(input) {
-  const sugBox = document.getElementById(`${input.id}-sugg`);
-  input.addEventListener('input', async () => {
-    const val = input.value.trim();
-    if (!val) return (sugBox.style.display = 'none');
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${val}&accept-language=en`);
-    const data = await res.json();
-    sugBox.innerHTML = '';
-    data.slice(0, 5).forEach((item) => {
-      const div = document.createElement('div');
-      div.textContent = item.display_name;
-      div.onclick = () => {
-        input.value = item.display_name;
-        sugBox.style.display = 'none';
-      };
-      sugBox.appendChild(div);
-    });
-    sugBox.style.display = 'block';
-  });
 }
-
-attachAuto(startInput);
-attachAuto(endInput);
-
-dirBtn.addEventListener('click', async () => {
-  const start = startInput.value.trim();
-  const end = endInput.value.trim();
-  if (!start || !end) return;
-
-  const res1 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${start}&accept-language=en`);
-  const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${end}&accept-language=en`);
-  const data1 = await res1.json();
-  const data2 = await res2.json();
-
-  if (!data1.length || !data2.length) return;
-  const startCoord = L.latLng(data1[0].lat, data1[0].lon);
-  const endCoord = L.latLng(data2[0].lat, data2[0].lon);
-
-  if (control) map.removeControl(control);
-  control = L.Routing.control({
-    waypoints: [startCoord, endCoord],
-    routeWhileDragging: false
-  }).addTo(map);
-});
-
-// ========== LIVE LOCATION ==========
-document.getElementById('live-location').addEventListener('click', () => {
-  if (!navigator.geolocation) return alert("Geolocation not supported.");
-  navigator.geolocation.getCurrentPosition(pos => {
-    const { latitude, longitude } = pos.coords;
-    if (marker) map.removeLayer(marker);
-    marker = L.marker([latitude, longitude]).addTo(map);
-    map.setView([latitude, longitude], 15);
-  }, () => alert("Permission denied."));
-});
-
-// ========== LIVE WEATHER API ==========
-async function updateWeather(lat = 25.276987, lon = 51.520008) {
-  const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
-  const data = await res.json();
-  const w = data.current_weather;
-  document.getElementById('weather-box').innerHTML = `
-    <h4>Live Weather</h4>
-    <p>Temp: ${w.temperature}°C</p>
-    <p>Wind: ${w.windspeed} km/h</p>
-    <p>Condition: ${w.weathercode == 0 ? 'Clear ☀️' : 'Cloudy ☁️'}</p>
-  `;
-}
-
-updateWeather();
-
-// ========== STATIC HISTORY ==========
-document.getElementById('historyList').innerHTML = `
-  <li>Qatar ➝ Dubai</li>
-  <li>London ➝ Paris</li>
-  <li>New York ➝ Tokyo</li>
-`;
