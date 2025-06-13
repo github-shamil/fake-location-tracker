@@ -90,18 +90,36 @@ body, html {
   width: 300px;
 }
 
+/* 📱 Responsive and smart direction panel (same place as search bar) */
 #direction-panel {
-  top: 100px;
+  top: 70px;
   left: 50%;
   transform: translateX(-50%);
   display: none;
+  width: 320px;
+  max-width: 90%;
+  z-index: 1001;
 }
 
-#history-panel {
-  top: 80px;
-  right: 75px;
-  width: 280px;
+/* 📱 Responsive history panel for mobile */
+@media (max-width: 768px) {
+  #direction-panel {
+    width: 90%;
+    top: 70px;
+  }
+
+  #history-panel {
+    width: 85%;
+    right: 8%;
+    top: 100px;
+  }
+
+  #historyList li {
+    font-size: 13px;
+    padding: 6px;
+  }
 }
+
 
 input[type="text"] {
   padding: 10px;
