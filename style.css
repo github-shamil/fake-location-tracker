@@ -147,7 +147,10 @@ input[type="text"] {
 }
 
 .suggestion {
-  padding: 6px 10px;
+  padding: 12px 16px;
+  font-size: 16px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   cursor: pointer;
 }
 
