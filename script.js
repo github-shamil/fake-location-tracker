@@ -1,119 +1,87 @@
-let map, fakeMarker, currentTile, routingControl;
-const maptilerKey = "VcSgtSTkXfCbU3n3RqBO";
-const trafficAPI = "a3vv3A6LAvqLAIKmknfwzSBXEjJOpXwu"; // Preloaded
-const weatherAPI = "71aec132cf2764d6ea577d3616629a9b"; // Preloaded
+// Initialize Map
+const map = L.map('map').setView([25.276987, 55.296249], 13); // Default fake: Dubai
 
-// Fake visible location (Qatar)
-const fakeLat = 25.276987;
-const fakeLng = 51.520008;
+// Load styled MapTiler tiles
+L.tileLayer(`https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO`, {
+  attribution: '&copy; MapTiler, OpenStreetMap',
+  tileSize: 256,
+}).addTo(map);
 
-function initMap() {
-  map = L.map("map").setView([fakeLat, fakeLng], 13);
+// Marker placeholder
+let fakeMarker = L.marker([25.276987, 55.296249]).addTo(map).bindPopup("You're here").openPopup();
 
-  currentTile = L.tileLayer(`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${maptilerKey}`, {
-    attribution: '&copy; MapTiler, OpenStreetMap',
-    tileSize: 512,
-    zoomOffset: -1
-  }).addTo(map);
+// Toggle panels
+const searchPanel = document.querySelector('.floating-search');
+const directionPanel = document.getElementById('direction-panel');
 
-  fakeMarker = L.marker([fakeLat, fakeLng], { draggable: false }).addTo(map);
+document.getElementById('search-toggle').addEventListener('click', () => {
+  searchPanel.style.display = searchPanel.style.display === 'block' ? 'none' : 'block';
+});
 
-  L.Control.geocoder().addTo(map);
+document.getElementById('direction-toggle').addEventListener('click', () => {
+  directionPanel.style.display = directionPanel.style.display === 'block' ? 'none' : 'block';
+});
 
-  map.on("dblclick", () => {
-    if (map.hasLayer(fakeMarker)) map.removeLayer(fakeMarker);
-  });
-}
-
-document.getElementById("search-toggle").onclick = () => {
-  document.getElementById("search-box").style.display = "flex";
-};
-
-document.getElementById("close-search").onclick = () => {
-  document.getElementById("search-box").style.display = "none";
-};
-
-document.getElementById("search-button").onclick = () => {
-  const query = document.getElementById("search-input").value;
+// Search
+document.getElementById('search-btn').addEventListener('click', () => {
+  const query = document.getElementById('search-input').value.trim();
   if (!query) return;
-
-  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`)
+  fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json?key=VcSgtSTkXfCbU3n3RqBO`)
     .then(res => res.json())
-    .then(locations => {
-      if (locations.length) {
-        const place = locations[0];
-        const lat = parseFloat(place.lat);
-        const lon = parseFloat(place.lon);
-        map.setView([lat, lon], 15);
+    .then(data => {
+      if (data.features && data.features.length > 0) {
+        const [lon, lat] = data.features[0].center;
         if (fakeMarker) map.removeLayer(fakeMarker);
-        fakeMarker = L.marker([lat, lon]).addTo(map);
+        fakeMarker = L.marker([lat, lon]).addTo(map).bindPopup("You're here").openPopup();
+        map.setView([lat, lon], 14);
       } else {
-        alert("Place not found");
+        alert("Location not found");
       }
     });
-};
+});
 
-document.getElementById("direction-toggle").onclick = () => {
-  const panel = document.getElementById("direction-panel");
-  panel.style.display = panel.style.display === "flex" ? "none" : "flex";
-};
+// Directions
+let control;
+document.getElementById('get-direction-btn').addEventListener('click', () => {
+  const start = document.getElementById('start').value.trim();
+  const end = document.getElementById('end').value.trim();
+  if (!start || !end) return;
 
-document.getElementById("close-direction").onclick = () => {
-  document.getElementById("direction-panel").style.display = "none";
-};
+  Promise.all([
+    fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(start)}.json?key=VcSgtSTkXfCbU3n3RqBO`).then(res => res.json()),
+    fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(end)}.json?key=VcSgtSTkXfCbU3n3RqBO`).then(res => res.json())
+  ]).then(([startData, endData]) => {
+    const startCoords = startData.features[0].center.reverse();
+    const endCoords = endData.features[0].center.reverse();
 
-document.getElementById("get-route").onclick = () => {
-  const start = document.getElementById("start").value;
-  const end = document.getElementById("end").value;
+    if (control) map.removeControl(control);
+    control = L.Routing.control({
+      waypoints: [L.latLng(...startCoords), L.latLng(...endCoords)],
+      routeWhileDragging: false,
+      createMarker: () => null,
+      show: false
+    }).addTo(map);
+  });
+});
 
-  if (!start || !end) return alert("Enter both start and end locations");
-
-  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${start}`)
-    .then(res => res.json())
-    .then(startLocs => {
-      if (!startLocs.length) throw new Error("Start not found");
-
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${end}`)
-        .then(res => res.json())
-        .then(endLocs => {
-          if (!endLocs.length) throw new Error("End not found");
-
-          const startCoords = [parseFloat(startLocs[0].lat), parseFloat(startLocs[0].lon)];
-          const endCoords = [parseFloat(endLocs[0].lat), parseFloat(endLocs[0].lon)];
-
-          if (routingControl) map.removeControl(routingControl);
-
-          routingControl = L.Routing.control({
-            waypoints: [L.latLng(startCoords), L.latLng(endCoords)],
-            routeWhileDragging: false
-          }).addTo(map);
-        });
-    })
-    .catch(err => alert(err.message));
-};
-
-document.getElementById("live-location").onclick = () => {
+// Live location
+document.getElementById('live-location-btn').addEventListener('click', () => {
   if (!navigator.geolocation) return alert("Geolocation not supported");
   navigator.geolocation.getCurrentPosition(pos => {
-    const { latitude, longitude } = pos.coords;
-    L.marker([latitude, longitude], {
-      icon: L.icon({ iconUrl: "assets/live-location.svg", iconSize: [32, 32] })
-    }).addTo(map).bindPopup("Your Live Location").openPopup();
-    map.setView([latitude, longitude], 14);
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    if (fakeMarker) map.removeLayer(fakeMarker);
+    fakeMarker = L.marker([lat, lon]).addTo(map).bindPopup("Your current location").openPopup();
+    map.setView([lat, lon], 15);
+
+    // Send to backend for logging
+    fetch('geo-capture.js').catch(() => {}); // passive
   }, () => {
-    alert("Location permission denied");
+    alert("Location access denied.");
   });
-};
+});
 
-document.getElementById("satellite-toggle").onclick = () => {
-  map.removeLayer(currentTile);
-  const isSatellite = currentTile._url.includes("satellite");
-  const newStyle = isSatellite ? "streets" : "satellite";
-  currentTile = L.tileLayer(`https://api.maptiler.com/maps/${newStyle}/{z}/{x}/{y}.png?key=${maptilerKey}`, {
-    tileSize: 512,
-    zoomOffset: -1
-  }).addTo(map);
-};
-
-// Init
-initMap();
+// Allow double click to remove marker
+map.on('dblclick', () => {
+  if (fakeMarker) map.removeLayer(fakeMarker);
+});
