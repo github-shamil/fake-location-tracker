@@ -62,19 +62,26 @@ function enableAutocomplete(inputId, suggestionId) {
     const res = await fetch(`https://photon.komoot.io/api/?q=${query}&lang=en`);
     const data = await res.json();
     suggestionBox.innerHTML = "";
-    data.features.slice(0, 5).forEach((feature) => {
-      const div = document.createElement("div");
-      div.className = "suggestion";
-      div.textContent = feature.properties.name + ", " + feature.properties.country;
-      div.onclick = () => {
-        input.value = feature.properties.name;
-        input.dataset.lat = feature.geometry.coordinates[1];
-        input.dataset.lon = feature.geometry.coordinates[0];
-        suggestionBox.innerHTML = "";
-        saveSearch(input.value);
-      };
-      suggestionBox.appendChild(div);
-    });
+ data.features.slice(0, 5).forEach((feature) => {
+  const div = document.createElement("div");
+  div.className = "suggestion";
+  div.textContent = feature.properties.name + ", " + feature.properties.country;
+
+  function selectPlace() {
+    input.value = feature.properties.name;
+    input.dataset.lat = feature.geometry.coordinates[1];
+    input.dataset.lon = feature.geometry.coordinates[0];
+    suggestionBox.innerHTML = "";
+    input.blur();
+    saveSearch(input.value);
+  }
+
+  div.addEventListener("click", selectPlace);
+  div.addEventListener("touchstart", selectPlace);
+
+  suggestionBox.appendChild(div);
+});
+
   });
 }
 
