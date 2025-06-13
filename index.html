@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,42 +5,65 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fake Location Tracker</title>
   <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="assets/map-icon.png" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <script src="script.js" defer></script>
 </head>
 <body class="light-mode">
-  <div id="map"></div>
-  <div class="controls">
-    <button id="search-toggle"><img src="assets/search-icon.svg" /></button>
-    <button id="direction-toggle"><img src="assets/direction-icon.svg" /></button>
-    <button id="location-toggle"><img src="assets/location-icon.svg" /></button>
-    <button id="traffic-toggle"><img src="assets/traffic-icon.svg" /></button>
-    <button id="weather-toggle"><img src="assets/weather-icon.svg" /></button>
-    <button id="theme-toggle">🌓</button>
+
+  <!-- 🔄 Loading Screen -->
+  <div id="preloader">
+    <div class="loader-text">Loading Premium Map...</div>
+    <div class="spinner"></div>
   </div>
 
-  <div class="floating-search" style="display:none;">
-    <input id="searchBox" placeholder="Search place..." />
+  <!-- 🗺️ Map -->
+  <div id="map"></div>
+
+  <!-- 🔍 Search Floating Box -->
+  <div class="floating-search" id="searchBoxContainer">
+    <input id="searchBox" placeholder="Search a place..." autocomplete="off" />
     <div id="searchSuggestions" class="suggestions"></div>
     <button onclick="searchPlace()">Search</button>
-    <button onclick="hidePanel('searchBox')"><img src="assets/close-icon.svg" /></button>
   </div>
 
-  <div id="direction-panel" style="display:none;">
-    <input id="start" placeholder="Start..." />
+  <!-- 🚦 Buttons -->
+  <div class="icon-buttons">
+    <img src="assets/search-icon.svg" id="search-toggle" title="Search" />
+    <img src="assets/direction-icon.svg" id="direction-toggle" title="Get Directions" />
+    <img src="assets/live-icon.svg" id="location-toggle" title="My Location" />
+    <img src="assets/traffic-icon.svg" id="traffic-toggle" title="Toggle Traffic" />
+    <img src="assets/weather-icon.svg" id="weather-toggle" title="Weather Info" />
+    <img src="assets/theme-icon.svg" id="theme-toggle" title="Toggle Theme" />
+  </div>
+
+  <!-- 🛣️ Directions -->
+  <div id="direction-panel">
+    <input id="start" placeholder="Start (e.g. My Location)" autocomplete="off" />
     <div id="startSuggestions" class="suggestions"></div>
-    <input id="end" placeholder="End..." />
+    <input id="end" placeholder="End place..." autocomplete="off" />
     <div id="endSuggestions" class="suggestions"></div>
     <button onclick="getDirections()">Get Direction</button>
     <div id="routeSummary"></div>
   </div>
 
-  <div id="weather-box" style="display:none;">
-    <div id="weatherTemp"></div>
-    <div id="weatherCondition"></div>
+  <!-- ☁️ Weather Box -->
+  <div id="weather-box">
+    <h4>Weather</h4>
+    <p id="weatherTemp">--°C</p>
+    <p id="weatherCondition">--</p>
     <div id="weatherDetails"></div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
-  <script src="script.js"></script>
+  <!-- 📜 Search History -->
+  <div id="history-panel">
+    <h4>Search History</h4>
+    <ul id="historyList"></ul>
+  </div>
+
 </body>
 </html>
