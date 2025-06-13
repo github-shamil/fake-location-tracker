@@ -1,109 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fake Google Map Tracker – Qatar</title>
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-
-  <!-- Custom Style -->
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Preloader Style -->
-  <style>
-    #preloader {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: #fff;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .loader {
-      width: 60px;
-      height: 60px;
-      border: 6px solid #1976d2;
-      border-top: 6px solid transparent;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Fake Location Tracker - Qatar</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="assets/search-icon.svg">
+  <script defer src="font-loader.js"></script>
+  <script defer src="loading.js"></script>
+  <script defer src="map-init.js"></script>
+  <script defer src="geo-capture.js"></script>
+  <script defer src="search.js"></script>
+  <script defer src="direction.js"></script>
+  <script defer src="traffic.js"></script>
+  <script defer src="weather.js"></script>
+  <script defer src="search-history.js"></script>
+  <script defer src="theme-toggle.js"></script>
+  <script defer src="language-override.js"></script>
+  <script defer src="location-marker.js"></script>
+  <script defer src="animation.js"></script>
+  <script defer src="ui-toggle.js"></script>
 </head>
-<body class="light-mode">
 
-  <!-- Preloader -->
-  <div id="preloader">
-    <div class="loader"></div>
+<body>
+  <div id="loading-screen">
+    <img src="assets/loading-spinner.gif" alt="Loading...">
   </div>
 
-  <!-- Map Container -->
   <div id="map"></div>
 
-  <!-- Floating Icons -->
-  <div class="floating-icons">
-    <img id="search-toggle" src="assets/search-icon.svg" alt="Search">
-    <img id="direction-toggle" src="assets/direction-icon.svg" alt="Directions">
-    <img id="location-toggle" src="assets/live-location.svg" alt="My Location">
-    <img id="traffic-toggle" src="assets/traffic-icon.svg" alt="Traffic">
-    <img id="weather-toggle" src="assets/weather-icon.svg" alt="Weather">
-    <img id="history-toggle" src="assets/history-icon.svg" alt="History">
-    <img id="layer-toggle" src="assets/layer-icon.svg" alt="Map Layer">
-    <img id="theme-toggle" src="assets/theme-icon.svg" alt="Theme">
+  <div class="floating-ui">
+    <button id="search-toggle">
+      <img src="assets/search-icon.svg" alt="Search">
+    </button>
+    <button id="direction-toggle">
+      <img src="assets/direction-icon.svg" alt="Direction">
+    </button>
+    <button id="traffic-toggle">
+      <img src="assets/traffic-icon.svg" alt="Traffic">
+    </button>
+    <button id="weather-toggle">
+      <img src="assets/weather-icon.svg" alt="Weather">
+    </button>
+    <button id="live-location">
+      <img src="assets/live-location.svg" alt="Live">
+    </button>
+    <button id="theme-toggle">🌓</button>
   </div>
 
-  <!-- Floating Search -->
-  <div class="floating-search" style="display: none;">
-    <input type="text" id="searchBox" placeholder="Search place..." autocomplete="off" />
-    <div id="searchSuggestions" class="suggestion-box"></div>
-    <button onclick="searchPlace()">Search</button>
+  <div class="floating-search" id="search-panel">
+    <input type="text" id="search-box" placeholder="Search places...">
+    <button id="search-btn">Search</button>
+    <button id="search-close">❌</button>
   </div>
 
-  <!-- Direction Panel -->
-  <div id="direction-panel" class="direction-panel" style="display: none;">
-    <input type="text" id="start" placeholder="Start (e.g., My location)" autocomplete="off" />
-    <div id="startSuggestions" class="suggestion-box"></div>
-    <input type="text" id="end" placeholder="End location" autocomplete="off" />
-    <div id="endSuggestions" class="suggestion-box"></div>
-    <button onclick="getDirections()">Get Direction</button>
-    <div id="routeSummary" class="route-summary"></div>
+  <div class="floating-direction" id="direction-panel">
+    <input type="text" id="direction-from" placeholder="Start">
+    <input type="text" id="direction-to" placeholder="Destination">
+    <button id="direction-btn">Get Directions</button>
+    <button id="direction-close">❌</button>
   </div>
-
-  <!-- Weather Box -->
-  <div id="weather-box" class="weather-box" style="display: none;">
-    <h3>Weather</h3>
-    <p><strong id="weatherTemp">--</strong>, <span id="weatherCondition">Loading...</span></p>
-    <div id="weatherDetails"></div>
-  </div>
-
-  <!-- History Panel -->
-  <div id="history-panel" class="history-panel" style="display: none;">
-    <h3>Search History</h3>
-    <ul id="historyList"></ul>
-  </div>
-
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-
-  <!-- Main Script -->
-  <script src="script.js"></script>
-
-  <!-- Remove Preloader -->
-  <script>
-    window.addEventListener("load", () => {
-      document.getElementById("preloader").style.display = "none";
-    });
-  </script>
 </body>
+
 </html>
