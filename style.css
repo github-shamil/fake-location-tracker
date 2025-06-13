@@ -36,7 +36,8 @@ body, html {
   width: 250px;
 }
 
-.floating-search .search-btn {
+.floating-search .search-btn,
+.search-btn {
   background: #1976d2;
   color: white;
   border: none;
@@ -90,36 +91,68 @@ body, html {
   width: 300px;
 }
 
-/* 📦 Updated Direction Panel (Mobile-friendly, same as search) */
+/* 📦 Direction Panel */
 #direction-panel {
-  top: 20px;
+  position: absolute;
+  top: 65px;
   left: 50%;
   transform: translateX(-50%);
-  display: none;
-  width: 300px;
-  max-width: 90%;
+  background: white;
+  padding: 14px;
+  border-radius: 14px;
   z-index: 1001;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 360px;
+  display: none;
 }
 
-/* 📱 History Panel Mobile Fix */
+#direction-panel input {
+  font-size: 14px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  width: 100%;
+}
+
+/* 📱 Responsive Direction Panel */
 @media (max-width: 768px) {
   #direction-panel {
-    width: 90%;
-    top: 20px;
-  }
-
-  #history-panel {
-    width: 90%;
-    right: 5%;
-    top: 100px;
-  }
-
-  #historyList li {
-    font-size: 12px;
-    padding: 5px 8px;
+    top: 60px;
+    width: 92%;
+    max-width: 360px;
   }
 }
 
+/* 📦 Search History Box */
+#history-panel {
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 14px;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.2);
+  background: white;
+  margin-top: 10px;
+}
+
+/* 📜 History Items */
+#historyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#historyList li {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#historyList li:last-child {
+  border-bottom: none;
+}
 
 input[type="text"] {
   padding: 10px;
@@ -176,19 +209,6 @@ input[type="text"] {
   background: #f0f0f0;
 }
 
-/* 📋 History */
-#historyList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-#historyList li {
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-  font-size: 14px;
-}
-
 /* 🌗 Dark Mode */
 body.dark-mode {
   background-color: #121212;
@@ -206,6 +226,7 @@ body.dark-mode .toggle-btn {
 body.dark-mode .suggestion:hover {
   background: #333;
 }
+
 /* 🚦 Traffic & Weather Buttons */
 .floating-buttons .traffic-btn,
 .floating-buttons .weather-btn {
