@@ -83,13 +83,27 @@ enableAutocomplete("start", "startSuggestions");
 enableAutocomplete("end", "endSuggestions");
 
 // 📌 Search Place
-function searchPlace() {
+async function searchPlace() {
   const input = document.getElementById("searchBox");
-  const lat = input.dataset.lat;
-  const lon = input.dataset.lon;
-  if (!lat || !lon) return alert("Please select a place from suggestions.");
-  if (fakeMarker) map.removeLayer(fakeMarker);
+  let lat = input.dataset.lat;
+  let lon = input.dataset.lon;
 
+  // 🔍 If no suggestion clicked (manual input), fetch coords using Photon
+  if (!lat || !lon) {
+    const query = input.value.trim();
+    if (!query) return alert("Please enter a place.");
+
+    const res = await fetch(`https://photon.komoot.io/api/?q=${query}&lang=en`);
+    const data = await res.json();
+    if (data.features.length === 0) return alert("Place not found. Try again.");
+
+    const coords = data.features[0].geometry.coordinates;
+    lat = coords[1];
+    lon = coords[0];
+  }
+
+  // 🗺️ Update fake marker
+  if (fakeMarker) map.removeLayer(fakeMarker);
   const coords = [parseFloat(lat), parseFloat(lon)];
   fakeMarker = L.marker(coords, {
     icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
@@ -99,27 +113,53 @@ function searchPlace() {
   saveSearch(input.value);
 }
 
+
 // 🛣️ Directions
-function getDirections() {
+async function getDirections() {
   const startInput = document.getElementById("start");
   const endInput = document.getElementById("end");
 
   let startCoords, endCoords;
 
+  // 🧭 Handle "My Location"
   if (startInput.value.toLowerCase() === "my location") {
     navigator.geolocation.getCurrentPosition((pos) => {
       startCoords = [pos.coords.latitude, pos.coords.longitude];
-      buildRoute(startCoords, getCoords(endInput));
-      fetchWeather(...startCoords);
+      handleEnd();
     });
   } else {
-    if (!startInput.dataset.lat || !endInput.dataset.lat) return alert("Select both places from suggestions.");
-    startCoords = getCoords(startInput);
-    endCoords = getCoords(endInput);
+    startCoords = await resolveCoords(startInput);
+    handleEnd();
+  }
+
+  async function handleEnd() {
+    endCoords = await resolveCoords(endInput);
+    if (!startCoords || !endCoords) return;
+
     buildRoute(startCoords, endCoords);
     fetchWeather(...endCoords);
   }
+
+  async function resolveCoords(input) {
+    if (input.dataset.lat && input.dataset.lon) {
+      return [parseFloat(input.dataset.lat), parseFloat(input.dataset.lon)];
+    }
+
+    const query = input.value.trim();
+    if (!query) return alert("Please enter both places.");
+    const res = await fetch(`https://photon.komoot.io/api/?q=${query}&lang=en`);
+    const data = await res.json();
+    if (data.features.length === 0) {
+      alert(`Place not found: ${query}`);
+      return null;
+    }
+    const coords = data.features[0].geometry.coordinates;
+    input.dataset.lat = coords[1];
+    input.dataset.lon = coords[0];
+    return [coords[1], coords[0]];
+  }
 }
+
 
 function buildRoute(startCoords, endCoords) {
   if (routingControl) map.removeControl(routingControl);
