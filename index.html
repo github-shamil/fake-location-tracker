@@ -11,7 +11,6 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
-  <!-- Icons (optional for theme/layer toggles) -->
   <link rel="icon" href="assets/search-icon.svg" />
 </head>
 <body class="light-mode">
@@ -26,7 +25,7 @@
     <div id="searchSuggestions" class="suggestions"></div>
   </div>
 
-  <!-- �� ROUTE PANEL -->
+  <!-- 🧭 ROUTE PANEL -->
   <div class="panel" id="direction-panel">
     <button class="close-btn" onclick="hidePanel('direction-panel')">
       <img src="assets/close-icon.svg" alt="Close" />
@@ -52,6 +51,14 @@
     <ul id="historyList"></ul>
   </div>
 
+  <!-- ⛅ WEATHER PANEL -->
+  <div id="weather-box">
+    <div class="title">Weather Info</div>
+    <div class="temp" id="weatherTemp">--°C</div>
+    <div class="condition" id="weatherCondition">--</div>
+    <div id="weatherDetails">Loading...</div>
+  </div>
+
   <!-- ⚙️ CONTROL BUTTONS -->
   <div class="floating-buttons">
 
@@ -73,6 +80,16 @@
 
     <button class="toggle-btn" id="history-toggle" title="Search History">
       <img src="assets/search-icon.svg" alt="History" />
+    </button>
+
+    <!-- 🚦 New: TRAFFIC Button -->
+    <button class="traffic-btn" id="traffic-toggle" title="Toggle Traffic">
+      <img src="assets/traffic-icon.svg" alt="Traffic" />
+    </button>
+
+    <!-- ⛅ New: WEATHER Button -->
+    <button class="weather-btn" id="weather-toggle" title="Show Weather">
+      <img src="assets/weather-icon.svg" alt="Weather" />
     </button>
   </div>
 
