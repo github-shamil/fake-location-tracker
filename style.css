@@ -185,3 +185,71 @@ body.dark-mode .toggle-btn {
 body.dark-mode .suggestion:hover {
   background: #333;
 }
+/* 🚦 Traffic & Weather Buttons */
+.floating-buttons .traffic-btn,
+.floating-buttons .weather-btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  transition: background 0.3s ease;
+}
+
+.floating-buttons .traffic-btn.active {
+  background-color: #ff5252;
+}
+
+.floating-buttons .weather-btn.active {
+  background-color: #29b6f6;
+}
+
+.floating-buttons .traffic-btn img,
+.floating-buttons .weather-btn img {
+  width: 100%;
+  height: auto;
+}
+
+/* ☁️ Weather Info Box */
+#weather-box {
+  position: fixed;
+  bottom: 80px;
+  right: 75px;
+  width: 240px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  padding: 16px;
+  z-index: 1002;
+  display: none;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#weather-box .title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+#weather-box .temp {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1976d2;
+}
+
+#weather-box .condition {
+  text-transform: capitalize;
+  margin-bottom: 4px;
+}
+
+body.dark-mode #weather-box {
+  background: #1e1e1e;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
