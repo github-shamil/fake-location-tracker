@@ -140,6 +140,26 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
+.admin-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 20px;
+  flex-wrap: wrap;
+}
+.admin-buttons a {
+  background: #1e1e2e;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #00ff99;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.2s;
+}
+.admin-buttons a:hover {
+  background: #00ff99;
+  color: #000;
+}
+
 /* 📜 Search History Panel */
 #history-panel {
   position: absolute;
