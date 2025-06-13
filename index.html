@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake Location Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="light-mode">
+  <div id="map"></div>
+  <div class="controls">
+    <button id="search-toggle"><img src="assets/search-icon.svg" /></button>
+    <button id="direction-toggle"><img src="assets/direction-icon.svg" /></button>
+    <button id="location-toggle"><img src="assets/location-icon.svg" /></button>
+    <button id="traffic-toggle"><img src="assets/traffic-icon.svg" /></button>
+    <button id="weather-toggle"><img src="assets/weather-icon.svg" /></button>
+    <button id="theme-toggle">🌓</button>
+  </div>
+
+  <div class="floating-search" style="display:none;">
+    <input id="searchBox" placeholder="Search place..." />
+    <div id="searchSuggestions" class="suggestions"></div>
+    <button onclick="searchPlace()">Search</button>
+    <button onclick="hidePanel('searchBox')"><img src="assets/close-icon.svg" /></button>
+  </div>
+
+  <div id="direction-panel" style="display:none;">
+    <input id="start" placeholder="Start..." />
+    <div id="startSuggestions" class="suggestions"></div>
+    <input id="end" placeholder="End..." />
+    <div id="endSuggestions" class="suggestions"></div>
+    <button onclick="getDirections()">Get Direction</button>
+    <div id="routeSummary"></div>
+  </div>
+
+  <div id="weather-box" style="display:none;">
+    <div id="weatherTemp"></div>
+    <div id="weatherCondition"></div>
+    <div id="weatherDetails"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
