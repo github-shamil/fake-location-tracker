@@ -1,65 +1,74 @@
+/* 🌍 General Layout */
 body, html {
   margin: 0;
   padding: 0;
   height: 100%;
   font-family: 'Roboto', sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
-}
-
-:root {
-  --bg: #ffffff;
-  --text: #000000;
-  --panel: #ffffff;
-  --input: #f5f5f5;
-  --border: #ccc;
-}
-
-body.dark {
-  --bg: #121212;
-  --text: #f0f0f0;
-  --panel: #1e1e1e;
-  --input: #2c2c2c;
-  --border: #444;
 }
 
 #map {
   height: 100%;
   width: 100%;
-  transition: filter 0.3s ease;
+  z-index: 1;
+}
+
+/* 🔍 Floating Search Bar */
+.floating-search {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: 8px 15px;
+  z-index: 1001;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.floating-search input {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 250px;
+}
+
+.floating-search .search-btn {
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ⚙️ Floating Buttons */
+.floating-buttons {
+  position: fixed;
+  right: 15px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1001;
 }
 
 .toggle-btn {
-  position: fixed;
-  right: 15px;
   width: 48px;
   height: 48px;
   border: none;
-  background: var(--panel);
   border-radius: 50%;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px;
-  transition: background 0.3s ease;
-}
-
-.toggle-btn:hover {
-  background: var(--input);
-}
-
-#search-toggle {
-  top: 45%;
-  transform: translateY(-50%);
-}
-#location-toggle {
-  bottom: 110px;
-}
-#direction-toggle {
-  bottom: 50px;
-}
-#dark-toggle {
-  bottom: 170px;
 }
 
 .toggle-btn img {
@@ -67,45 +76,43 @@ body.dark {
   height: auto;
 }
 
+/* 🧭 Panel Styling */
 .panel {
   position: fixed;
-  background: var(--panel);
+  background: white;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  padding: 15px;
-  z-index: 1000;
+  padding: 20px;
+  z-index: 1001;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 280px;
-  transition: background 0.3s ease;
+  width: 300px;
 }
 
-#search-panel {
-  top: 20px;
+#direction-panel {
+  top: 100px;
   left: 50%;
   transform: translateX(-50%);
   display: none;
 }
-#direction-panel {
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: none;
+
+#history-panel {
+  top: 80px;
+  right: 75px;
+  width: 280px;
 }
 
 input[type="text"] {
-  padding: 8px;
+  padding: 10px;
   font-size: 14px;
-  border: 1px solid var(--border);
+  border: 1px solid #ccc;
   border-radius: 8px;
-  background: var(--input);
-  color: var(--text);
-  transition: background 0.3s ease, color 0.3s ease;
+  width: 100%;
 }
 
 .search-btn {
-  padding: 8px;
+  padding: 10px;
   background-color: #1976d2;
   color: white;
   font-weight: bold;
@@ -116,8 +123,8 @@ input[type="text"] {
 
 .close-btn {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 10px;
+  right: 10px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -127,36 +134,54 @@ input[type="text"] {
   width: 20px;
 }
 
+/* 🔽 Autocomplete Suggestions */
 .suggestions {
-  border: 1px solid var(--border);
+  border: 1px solid #ccc;
   border-radius: 8px;
   max-height: 150px;
   overflow-y: auto;
-  background: var(--panel);
+  background: white;
   font-size: 14px;
-  z-index: 1000;
-  color: var(--text);
-  transition: background 0.3s ease, color 0.3s ease;
+  z-index: 1002;
+  position: relative;
 }
 
 .suggestion {
   padding: 6px 10px;
   cursor: pointer;
 }
+
 .suggestion:hover {
-  background: var(--input);
+  background: #f0f0f0;
 }
 
-@media (max-width: 768px) {
-  .panel {
-    width: 90%;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+/* 📋 History */
+#historyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
 
-  .toggle-btn {
-    width: 40px;
-    height: 40px;
-    padding: 6px;
-  }
+#historyList li {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+/* 🌗 Dark Mode */
+body.dark-mode {
+  background-color: #121212;
+  color: white;
+}
+
+body.dark-mode .panel,
+body.dark-mode .floating-search,
+body.dark-mode .toggle-btn {
+  background: #1e1e1e;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .suggestion:hover {
+  background: #333;
 }
