@@ -2,38 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fake Location Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Location</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+e2jAY5IJXbHURy+2oU/aqS4Uv0XtquhZ9f7tWgw0="
+    crossorigin=""
+  />
+
+  <!-- Leaflet Routing Machine -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"
+  />
+
+  <!-- Custom CSS -->
   <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="assets/search-icon.svg" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 </head>
 <body>
+
+  <!-- Map -->
   <div id="map"></div>
 
+  <!-- 🔍 Search Toggle Icon -->
   <img src="assets/search-icon.svg" class="icon search-toggle" alt="Search" />
-  <img src="assets/direction-icon.svg" class="icon direction-toggle" alt="Direction" />
 
-  <!-- Search Panel -->
+  <!-- 🧭 Direction Toggle Icon -->
+  <img src="assets/direction-icon.svg" class="icon direction-toggle" alt="Directions" />
+
+  <!-- 🔍 Floating Search Box -->
   <div class="floating-search hidden">
-    <input id="search-input" type="text" placeholder="Search place..." />
+    <input type="text" id="search-input" placeholder="Search location..." autocomplete="off"/>
+    <div id="search-suggestions" class="suggestion-box"></div>
     <button onclick="searchLocation()">Search</button>
-    <button onclick="toggleSearch()">Close</button>
   </div>
 
-  <!-- Direction Panel -->
+  <!-- 🧭 Floating Direction Box -->
   <div class="floating-direction hidden" id="direction-panel">
-    <input id="start" type="text" placeholder="Start location" />
-    <input id="end" type="text" placeholder="Destination" />
+    <input type="text" id="start" placeholder="Start location" autocomplete="off"/>
+    <div id="start-suggestions" class="suggestion-box"></div>
+
+    <input type="text" id="end" placeholder="Destination" autocomplete="off"/>
+    <div id="end-suggestions" class="suggestion-box"></div>
+
     <button onclick="getDirections()">Get Directions</button>
-    <button onclick="toggleDirection()">Close</button>
   </div>
 
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-GZC+oM38XRboZKOKL2xzCugtbC6DgCTrsMRN3h4mCkE="
+    crossorigin=""
+  ></script>
+
+  <!-- Leaflet Routing -->
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+  <!-- Main JS -->
   <script src="script.js"></script>
 </body>
 </html>
