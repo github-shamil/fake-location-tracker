@@ -188,17 +188,29 @@ function renderHistory() {
 }
 renderHistory();
 
-// 🚦 Traffic Toggle
+// 🚦 Real TomTom Traffic Toggle
+let tomtomTraffic;
+
 document.getElementById("traffic-toggle").onclick = () => {
-  if (!trafficLayer) {
-    trafficLayer = L.tileLayer("https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png", {
-      attribution: "Traffic View",
-      maxZoom: 20
-    }).addTo(map);
+  const apiKey = "a3vv3A6LAvqLAIKmknfwzSBXEjJOpXwu"; // ⬅️ Replace with your real key
+
+  if (!tomtomTraffic) {
+    tomtomTraffic = L.tileLayer(
+      `https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${apiKey}`,
+      {
+        attribution: '&copy; <a href="https://www.tomtom.com/">TomTom</a>',
+        maxZoom: 20,
+        opacity: 0.7,
+      }
+    );
+    map.addLayer(tomtomTraffic);
   } else {
-    map.hasLayer(trafficLayer) ? map.removeLayer(trafficLayer) : map.addLayer(trafficLayer);
+    map.hasLayer(tomtomTraffic)
+      ? map.removeLayer(tomtomTraffic)
+      : map.addLayer(tomtomTraffic);
   }
 };
+
 
 // ⛅ Weather Toggle
 document.getElementById("weather-toggle").onclick = () => {
