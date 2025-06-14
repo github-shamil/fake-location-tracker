@@ -1,59 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fake Google Maps</title>
-
-  <!-- Leaflet CSS -->
+  <title>Advanced Fake Location Tracker</title>
+  <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Leaflet & Plugins -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-
-  <!-- MapTiler ENGLISH tiles -->
-  <script src="https://api.maptiler.com/maps/streets/leaflet/tiles.js?key=VcSgtSTkXfCbU3n3RqBO"></script>
 </head>
 <body>
-  <!-- Map Container -->
-  <div id="map"></div>
-
-  <!-- Search Button -->
-  <button id="search-toggle" class="map-btn right-center">
-    <img src="assets/search-icon.svg" alt="Search" />
-  </button>
-
-  <!-- Search Box -->
-  <div id="search-box" class="search-box">
-    <input type="text" id="search-input" placeholder="Search a place..." />
-    <button id="search-btn">Search</button>
-    <button id="search-close">✕</button>
-  </div>
-
-  <!-- Direction Button -->
-  <button id="direction-toggle" class="map-btn bottom-right">
-    <img src="assets/direction-icon.svg" alt="Direction" />
-  </button>
-
-  <!-- Direction Box -->
-  <div id="direction-box" class="direction-box">
-    <input type="text" id="start-input" placeholder="Start" />
-    <input type="text" id="end-input" placeholder="Destination" />
-    <button id="get-direction">Go</button>
-    <button id="direction-close">✕</button>
-  </div>
-
-  <!-- Live Location -->
-  <button id="live-location" class="map-btn bottom-left">
-    <img src="assets/gps-icon.svg" alt="GPS" />
-  </button>
-
-  <!-- Script -->
-  <script src="script.js"></script>
-</body>
+  <div id="map"></div>  <!-- Floating Icons -->  <div class="floating-icons">
+    <img src="assets/layers-icon.svg" id="mapTypeToggle" title="Map Type" />
+    <img src="assets/live-location.svg" id="locateMe" title="Current Location" />
+  </div>  <!-- Zoom Controls -->  <div class="zoom-controls">
+    <button id="zoomIn">+</button>
+    <button id="zoomOut">-</button>
+  </div>  <!-- Search Panel -->  <div class="search-container" id="searchPanel">
+    <img src="assets/search-icon.svg" class="search-toggle" id="searchToggle" />
+    <div class="search-box" id="searchBox">
+      <input type="text" id="placeInput" placeholder="Search here..." />
+      <button id="searchBtn">Search</button>
+      <img src="assets/close-icon.svg" id="closeSearch" class="close-btn" />
+    </div>
+  </div>  <!-- Direction Panel -->  <div class="direction-container" id="directionPanel">
+    <img src="assets/direction-icon.svg" class="direction-toggle" id="directionToggle" />
+    <div class="direction-box" id="directionBox">
+      <input type="text" id="start" placeholder="Your location" />
+      <input type="text" id="end" placeholder="Choose destination" />
+      <div class="transport-icons">
+        <img src="assets/car.svg" id="car" />
+        <img src="assets/bike.svg" id="bike" />
+        <img src="assets/train.svg" id="train" />
+        <img src="assets/walk.svg" id="walk" />
+      </div>
+      <button id="getDirection">Get Direction</button>
+      <img src="assets/close-icon.svg" id="closeDirection" class="close-btn" />
+    </div>
+  </div>  <!-- Map Type Popup -->  <div class="map-type-popup" id="mapTypePopup">
+    <div class="map-option" data-type="default">Default</div>
+    <div class="map-option" data-type="satellite">Satellite</div>
+    <div class="map-option" data-type="terrain">Terrain</div>
+    <div class="map-option" data-type="traffic">Traffic</div>
+    <div class="map-option" data-type="transit">Public Transport</div>
+    <div class="map-option" data-type="weather">Weather</div>
+  </div>  <script src="script.js"></script></body>
 </html>
