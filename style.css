@@ -1,119 +1,251 @@
-/* Full page layout reset */
-body, html {
+/* 🌍 Global Reset and Theme */
+body {
   margin: 0;
-  padding: 0;
-  height: 100%;
+  font-family: 'Segoe UI', Roboto, sans-serif;
   overflow: hidden;
-  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
-/* Map full-screen */
-#map {
-  height: 100vh;
+html, body, #map {
+  height: 100%;
   width: 100%;
-  z-index: 0;
 }
 
-/* Floating icons (Search, Direction) */
-.icon {
-  position: fixed;
-  width: 48px;
-  height: 48px;
-  background: white;
-  border-radius: 50%;
-  padding: 10px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+button {
   cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+/* 🗺️ Map Container */
+#map {
+  z-index: 1;
+}
+
+/* 🌐 Floating UI Containers */
+.floating-icons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   z-index: 1001;
-}
-
-/* Positioning search and direction icons */
-.search-toggle {
-  top: 50%;
-  right: 10px;
-  transform: translateY(-50%);
-}
-.direction-toggle {
-  bottom: 10px;
-  right: 10px;
-}
-
-/* Search and direction box (popup panel) */
-.floating-search,
-.floating-direction {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #fff;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.2);
-  z-index: 1002;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 90%;
-  max-width: 350px;
-  animation: fadeIn 0.3s ease;
+  gap: 8px;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateX(-50%) scale(0.9); }
-  to { opacity: 1; transform: translateX(-50%) scale(1); }
+.floating-icons button {
+  background-color: white;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Hide class */
-.hidden {
-  display: none;
-}
-
-/* Inputs and buttons */
-input, button {
-  padding: 10px;
-  font-size: 16px;
-  width: 100%;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  outline: none;
-  box-sizing: border-box;
-}
-input:focus {
-  border-color: #007BFF;
-}
-
-/* Button styles */
-button {
-  background: #007BFF;
-  color: white;
-  font-weight: bold;
-  border: none;
-  transition: background 0.2s ease;
-}
-button:hover {
-  background: #0056b3;
-}
-
-/* Suggestion dropdown under input */
-.suggestion-box {
+/* 🔍 Search Box (Top Center) */
+.floating-search {
   position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1002;
+  display: flex;
+  gap: 8px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.floating-search input[type="text"] {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
   border: 1px solid #ccc;
-  z-index: 9999;
-  max-height: 180px;
-  overflow-y: auto;
   font-size: 14px;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.floating-search button {
+  background-color: #1976d2;
+  color: white;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* 📍 Autocomplete Suggestions */
+.suggestions {
+  position: absolute;
+  top: 45px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  z-index: 1003;
+  max-width: 500px;
+  width: 90%;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  overflow: hidden;
 }
 
 .suggestion {
-  padding: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
   cursor: pointer;
 }
+
 .suggestion:hover {
   background-color: #f5f5f5;
+}
+
+/* 🛣️ Direction Panel */
+#direction-panel {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1004;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 500px;
+  padding: 12px;
+  display: none;
+}
+
+#direction-panel input {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+#direction-panel button {
+  width: 100%;
+  background-color: #388e3c;
+  color: white;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* ❌ Close Button for Panel */
+.close-btn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  font-size: 18px;
+  color: #888;
+}
+
+/* 📦 Weather Box */
+#weather-box {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(255,255,255,0.9);
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 1002;
+  display: none;
+  font-size: 14px;
+}
+
+/* 📜 Route Summary Box */
+#routeSummary {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+  z-index: 1002;
+  font-size: 14px;
+}
+
+/* 📚 History Panel */
+#history-panel {
+  position: absolute;
+  top: 70px;
+  left: 20px;
+  z-index: 1002;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  max-height: 200px;
+  width: 200px;
+  overflow-y: auto;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: none;
+}
+
+#history-panel li {
+  padding: 6px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* 🌙 Dark Mode Support */
+.dark-mode {
+  background-color: #222;
+  color: white;
+}
+.dark-mode .floating-search input,
+.dark-mode #direction-panel input,
+.dark-mode #direction-panel button,
+.dark-mode .suggestion,
+.dark-mode #history-panel,
+.dark-mode #weather-box,
+.dark-mode #routeSummary {
+  background-color: #333;
+  color: white;
+  border: 1px solid #555;
+}
+
+.dark-mode .suggestion:hover {
+  background-color: #444;
+}
+
+/* 📱 Mobile Adjustments */
+@media screen and (max-width: 600px) {
+  .floating-icons button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .floating-search input,
+  #direction-panel input,
+  #direction-panel button {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .floating-search button {
+    padding: 0 12px;
+  }
+
+  #direction-panel {
+    padding: 10px;
+  }
+
+  .suggestion {
+    font-size: 13px;
+  }
+
+  #weather-box,
+  #routeSummary {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+
+  #history-panel {
+    width: 160px;
+  }
 }
