@@ -1,39 +1,59 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fake Location Tracker</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <title>Fake Google Maps</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Leaflet & Plugins -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+  <!-- MapTiler ENGLISH tiles -->
+  <script src="https://api.maptiler.com/maps/streets/leaflet/tiles.js?key=VcSgtSTkXfCbU3n3RqBO"></script>
 </head>
-<body class="light-mode">
-  <div id="map"></div>  <!-- Floating Icons -->  <div class="floating-controls">
-    <img src="assets/search-icon.svg" id="search-toggle" alt="Search" />
-    <img src="assets/direction-icon.svg" id="direction-toggle" alt="Direction" />
-    <img src="assets/layer-icon.svg" id="layer-toggle" alt="Layer" />
-    <img src="assets/traffic-icon.svg" id="traffic-toggle" alt="Traffic" />
-    <img src="assets/weather-icon.svg" id="weather-toggle" alt="Weather" />
-    <img src="assets/location-icon.svg" id="location-toggle" alt="My Location" />
-    <img src="assets/theme-icon.svg" id="theme-toggle" alt="Theme" />
-  </div>  <!-- Floating Search -->  <div class="floating-search">
-    <input id="searchBox" placeholder="Search a place..." autocomplete="off" />
-    <div id="searchSuggestions" class="suggestion-box"></div>
-    <button onclick="searchPlace()">Search</button>
-  </div>  <!-- Direction Panel -->  <div id="direction-panel" class="panel">
-    <button class="close-btn" onclick="closeDirectionPanel()">&times;</button>
-    <input id="start" placeholder="Start" autocomplete="off" />
-    <div id="startSuggestions" class="suggestion-box"></div>
-    <input id="end" placeholder="Destination" autocomplete="off" />
-    <div id="endSuggestions" class="suggestion-box"></div>
-    <button onclick="getDirections()">Get Directions</button>
-    <div id="routeSummary"></div>
-  </div>  <!-- Weather Box -->  <div id="weather-box" class="panel">
-    <div id="weatherTemp">--</div>
-    <div id="weatherCondition">Loading...</div>
-    <div id="weatherDetails"></div>
-  </div>  <!-- History Panel -->  <div id="history-panel" class="panel">
-    <button class="close-btn" onclick="hidePanel('history-panel')">&times;</button>
-    <ul id="historyList"></ul>
-  </div>  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>  <script src="script.js"></script></body>
+<body>
+  <!-- Map Container -->
+  <div id="map"></div>
+
+  <!-- Search Button -->
+  <button id="search-toggle" class="map-btn right-center">
+    <img src="assets/search-icon.svg" alt="Search" />
+  </button>
+
+  <!-- Search Box -->
+  <div id="search-box" class="search-box">
+    <input type="text" id="search-input" placeholder="Search a place..." />
+    <button id="search-btn">Search</button>
+    <button id="search-close">✕</button>
+  </div>
+
+  <!-- Direction Button -->
+  <button id="direction-toggle" class="map-btn bottom-right">
+    <img src="assets/direction-icon.svg" alt="Direction" />
+  </button>
+
+  <!-- Direction Box -->
+  <div id="direction-box" class="direction-box">
+    <input type="text" id="start-input" placeholder="Start" />
+    <input type="text" id="end-input" placeholder="Destination" />
+    <button id="get-direction">Go</button>
+    <button id="direction-close">✕</button>
+  </div>
+
+  <!-- Live Location -->
+  <button id="live-location" class="map-btn bottom-left">
+    <img src="assets/gps-icon.svg" alt="GPS" />
+  </button>
+
+  <!-- Script -->
+  <script src="script.js"></script>
+</body>
 </html>
