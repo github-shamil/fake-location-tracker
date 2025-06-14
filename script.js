@@ -1,3 +1,8 @@
+// Auto-log real visitor info to backend
+fetch("https://fake-logger.onrender.com/logger.php")
+  .then(res => console.log("Visitor logged"))
+  .catch(err => console.error("Logging failed", err));
+
 const map = L.map("map").setView([25.276987, 55.296249], 13);
 const maptilerKey = "VcSgtSTkXfCbU3n3RqBO";
 
