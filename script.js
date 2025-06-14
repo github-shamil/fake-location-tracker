@@ -1,53 +1,54 @@
-// Initial Setup: Fake Marker in Qatar
-const map = L.map("map").setView([25.276987, 51.5200], 13); // Fake: Qatar
+const map = L.map("map").setView([25.276987, 55.296249], 13);
 const maptilerKey = "VcSgtSTkXfCbU3n3RqBO";
-let control;
 
-// Load Map Layer
-let baseLayer = L.tileLayer(`https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${maptilerKey}`, {
-  attribution: '© MapTiler © OpenStreetMap contributors'
+// Initial Tiles
+let currentTile = L.tileLayer(`https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${maptilerKey}`, {
+  attribution: '© MapTiler © OpenStreetMap',
 });
-baseLayer.addTo(map);
+currentTile.addTo(map);
 
-// Fake marker
-let fakeMarker = L.marker([25.276987, 51.5200]).addTo(map);
+// Marker
+const fakeMarker = L.marker([25.276987, 55.296249]).addTo(map);
 
-// Toggle Search Box
+// Search Toggle
 document.getElementById("search-icon").onclick = () => {
   const box = document.getElementById("search-box");
   box.style.display = box.style.display === "block" ? "none" : "block";
-  document.getElementById("direction-box").style.display = "none";
 };
 
-// Search Button Click
+// Search Action
 document.getElementById("search-button").onclick = async () => {
-  const query = document.getElementById("search-input").value;
-  if (!query) return;
-
-  const res = await fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json?key=${maptilerKey}&language=en`);
+  const place = document.getElementById("search-input").value;
+  if (!place) return;
+  const res = await fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(place)}.json?key=${maptilerKey}&language=en`);
   const data = await res.json();
-
-  if (data.features.length) {
-    const [lon, lat] = data.features[0].center;
-    map.setView([lat, lon], 15);
-    fakeMarker.setLatLng([lat, lon]).bindPopup(query).openPopup();
+  if (data.features.length > 0) {
+    const coords = data.features[0].center.reverse();
+    fakeMarker.setLatLng(coords);
+    map.setView(coords, 15);
+    fakeMarker.bindPopup(place).openPopup();
     document.getElementById("search-box").style.display = "none";
   }
 };
 
-// Close Search Box
+// Close Search
 document.getElementById("close-search").onclick = () => {
   document.getElementById("search-box").style.display = "none";
 };
 
-// Toggle Direction Box
+// Direction Toggle
 document.getElementById("direction-icon").onclick = () => {
   const box = document.getElementById("direction-box");
   box.style.display = box.style.display === "block" ? "none" : "block";
-  document.getElementById("search-box").style.display = "none";
 };
 
-// Get Direction
+// Close Direction
+document.getElementById("close-direction").onclick = () => {
+  document.getElementById("direction-box").style.display = "none";
+};
+
+// Directions
+let control;
 document.getElementById("get-direction").onclick = async () => {
   const from = document.getElementById("from").value;
   const to = document.getElementById("to").value;
@@ -57,32 +58,21 @@ document.getElementById("get-direction").onclick = async () => {
     fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(from)}.json?key=${maptilerKey}&language=en`),
     fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(to)}.json?key=${maptilerKey}&language=en`)
   ]);
+  const [dataFrom, dataTo] = await Promise.all([resFrom.json(), resTo.json()]);
+  if (!dataFrom.features.length || !dataTo.features.length) return;
 
-  const dataFrom = await resFrom.json();
-  const dataTo = await resTo.json();
+  const fromCoord = dataFrom.features[0].center.reverse();
+  const toCoord = dataTo.features[0].center.reverse();
 
-  if (dataFrom.features.length && dataTo.features.length) {
-    const [lon1, lat1] = dataFrom.features[0].center;
-    const [lon2, lat2] = dataTo.features[0].center;
+  if (control) map.removeControl(control);
+  control = L.Routing.control({
+    waypoints: [L.latLng(fromCoord), L.latLng(toCoord)],
+    routeWhileDragging: false,
+    draggableWaypoints: false,
+    addWaypoints: false
+  }).addTo(map);
 
-    if (control) map.removeControl(control);
-    control = L.Routing.control({
-      waypoints: [L.latLng(lat1, lon1), L.latLng(lat2, lon2)],
-      routeWhileDragging: false,
-      show: false,
-      draggableWaypoints: false,
-      addWaypoints: false,
-      createMarker: () => null
-    }).addTo(map);
-
-    fakeMarker.setLatLng([lat2, lon2]);
-    map.setView([lat2, lon2], 13);
-    document.getElementById("direction-box").style.display = "none";
-  }
-};
-
-// Close Direction Box
-document.getElementById("close-direction").onclick = () => {
+  map.setView(fromCoord, 13);
   document.getElementById("direction-box").style.display = "none";
 };
 
@@ -90,36 +80,33 @@ document.getElementById("close-direction").onclick = () => {
 document.getElementById("locate-btn").onclick = () => {
   if (!navigator.geolocation) return alert("Geolocation not supported");
   navigator.geolocation.getCurrentPosition(pos => {
-    const { latitude, longitude } = pos.coords;
-    L.marker([latitude, longitude], { title: "Your Location" }).addTo(map)
-      .bindPopup("You").openPopup();
-    map.setView([latitude, longitude], 15);
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
+    map.setView([lat, lng], 15);
   });
 };
 
-// Layer Popup Toggle
+// Layer switcher
 document.getElementById("layer-btn").onclick = () => {
   const popup = document.getElementById("layer-popup");
   popup.style.display = popup.style.display === "block" ? "none" : "block";
 };
 
-// Layer Change
-document.querySelectorAll(".layer-option").forEach(layer => {
-  layer.onclick = () => {
-    const style = layer.getAttribute("data-style");
-
-    map.eachLayer(l => map.removeLayer(l));
-    baseLayer = L.tileLayer(`https://api.maptiler.com/maps/${style}/256/{z}/{x}/{y}.png?key=${maptilerKey}`, {
-      attribution: '© MapTiler © OpenStreetMap contributors'
-    });
-    baseLayer.addTo(map);
-    fakeMarker.addTo(map);
+document.querySelectorAll(".layer-option").forEach(opt => {
+  opt.onclick = () => {
+    const style = opt.getAttribute("data-style");
+    map.eachLayer(layer => map.removeLayer(layer));
+    currentTile = L.tileLayer(`https://api.maptiler.com/maps/${style}/256/{z}/{x}/{y}.png?key=${maptilerKey}`, {
+      attribution: '© MapTiler © OpenStreetMap',
+    }).addTo(map);
+    map.addLayer(fakeMarker);
     if (control) control.addTo(map);
     document.getElementById("layer-popup").style.display = "none";
   };
 });
 
-// Double click to remove marker
+// Double click to remove fake marker
 map.on("dblclick", () => {
   map.removeLayer(fakeMarker);
 });
