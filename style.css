@@ -1,78 +1,112 @@
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-#map {
-  height: 100%;
-  width: 100%;
-}
-.icon {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  z-index: 999;
-  cursor: pointer;
-}
-#search-icon { top: 10px; right: 10px; }
-#direction-icon { top: 60px; right: 10px; }
-#locate-btn { bottom: 60px; right: 10px; }
-#layer-btn { bottom: 10px; right: 10px; }
+// MapTiler Setup
+const map = L.map("map").setView([25.276987, 51.5200], 13); // Fake Location: Qatar
+const maptilerKey = "VcSgtSTkXfCbU3n3RqBO";
+const tileLayer = L.tileLayer(`https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${maptilerKey}`, {
+  attribution: '© MapTiler © OpenStreetMap contributors',
+});
+tileLayer.addTo(map);
 
-.panel {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: white;
-  padding: 10px;
-  border-radius: 12px;
-  display: none;
-  z-index: 1000;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-.panel input {
-  width: 70%;
-  padding: 8px;
-  margin: 5px 0;
-}
-.panel button {
-  padding: 8px;
-  margin-left: 5px;
-}
-#layer-popup {
-  position: absolute;
-  bottom: 60px;
-  right: 10px;
-  background: white;
-  border-radius: 10px;
-  padding: 5px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  z-index: 1000;
-  display: none;
-}
-.layer-option {
-  padding: 8px;
-  cursor: pointer;
-}
-.layer-option:hover {
-  background: #f0f0f0;
-}
+// Icons
+const fakeMarker = L.marker([25.276987, 51.5200]).addTo(map);
 
-/* Mobile */
-@media (max-width: 600px) {
-  .icon {
-    width: 28px;
-    height: 28px;
+// Search Toggle
+document.getElementById("search-icon").onclick = () => {
+  const box = document.getElementById("search-box");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+};
+
+// Search Function
+document.getElementById("search-button").onclick = async () => {
+  const place = document.getElementById("search-input").value;
+  if (!place) return;
+  const res = await fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(place)}.json?key=${maptilerKey}&language=en`);
+  const data = await res.json();
+  if (data.features.length > 0) {
+    const coords = data.features[0].center.reverse(); // [lat, lng]
+    map.setView(coords, 15);
+    fakeMarker.setLatLng(coords);
+    fakeMarker.bindPopup(place).openPopup();
+    document.getElementById("search-box").style.display = "none";
   }
-  #search-icon { top: 8px; right: 8px; }
-  #direction-icon { top: 45px; right: 8px; }
-  #locate-btn { bottom: 60px; right: 8px; }
-  #layer-btn { bottom: 10px; right: 8px; }
-  .panel {
-    width: 95%;
-    font-size: 14px;
-  }
-}
+};
+
+// Close Search Box
+document.getElementById("close-search").onclick = () => {
+  document.getElementById("search-box").style.display = "none";
+};
+
+// Direction Toggle
+document.getElementById("direction-icon").onclick = () => {
+  const box = document.getElementById("direction-box");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+};
+
+// Leaflet Routing
+let control;
+document.getElementById("get-direction").onclick = async () => {
+  const from = document.getElementById("from").value;
+  const to = document.getElementById("to").value;
+  if (!from || !to) return;
+
+  const [resFrom, resTo] = await Promise.all([
+    fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(from)}.json?key=${maptilerKey}&language=en`),
+    fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(to)}.json?key=${maptilerKey}&language=en`),
+  ]);
+
+  const [dataFrom, dataTo] = await Promise.all([resFrom.json(), resTo.json()]);
+  if (!dataFrom.features.length || !dataTo.features.length) return;
+
+  const coordFrom = dataFrom.features[0].center.reverse();
+  const coordTo = dataTo.features[0].center.reverse();
+
+  if (control) map.removeControl(control);
+  control = L.Routing.control({
+    waypoints: [L.latLng(coordFrom), L.latLng(coordTo)],
+    routeWhileDragging: false,
+    show: false,
+    draggableWaypoints: false,
+    addWaypoints: false,
+  }).addTo(map);
+
+  map.setView(coordFrom, 13);
+  document.getElementById("direction-box").style.display = "none";
+};
+
+// Close Direction Box
+document.getElementById("close-direction").onclick = () => {
+  document.getElementById("direction-box").style.display = "none";
+};
+
+// Live Location Button
+document.getElementById("locate-btn").onclick = () => {
+  if (!navigator.geolocation) return alert("Geolocation not supported.");
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    L.marker([lat, lng], { title: "You" }).addTo(map).bindPopup("Your Location").openPopup();
+    map.setView([lat, lng], 15);
+  });
+};
+
+// Layer Switcher
+document.getElementById("layer-btn").onclick = () => {
+  const layerPopup = document.getElementById("layer-popup");
+  layerPopup.style.display = layerPopup.style.display === "block" ? "none" : "block";
+};
+document.querySelectorAll(".layer-option").forEach(layer => {
+  layer.onclick = () => {
+    const style = layer.getAttribute("data-style");
+    map.eachLayer(l => map.removeLayer(l));
+    L.tileLayer(`https://api.maptiler.com/maps/${style}/256/{z}/{x}/{y}.png?key=${maptilerKey}`, {
+      attribution: '© MapTiler © OpenStreetMap contributors',
+    }).addTo(map);
+    map.addLayer(fakeMarker);
+    if (control) control.addTo(map);
+    document.getElementById("layer-popup").style.display = "none";
+  };
+});
+
+// Double click to remove fake marker
+map.on("dblclick", () => {
+  map.removeLayer(fakeMarker);
+});
