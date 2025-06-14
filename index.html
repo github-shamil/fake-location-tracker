@@ -2,43 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Fake Location Tracker</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="assets/location-icon.svg" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
 </head>
 <body>
   <div id="map"></div>
 
   <!-- Icons -->
-  <img src="assets/search-icon.svg" class="icon" id="search-icon" />
-  <img src="assets/direction-icon.svg" class="icon" id="direction-icon" />
-  <img src="assets/layers-icon.svg" class="icon" id="layer-btn" />
-  <img src="assets/location-icon.svg" class="icon" id="locate-btn" />
+  <img src="assets/search-icon.svg" id="search-icon" class="icon top-center" />
+  <img src="assets/direction-icon.svg" id="direction-icon" class="icon bottom-right" />
+  <img src="assets/layer-icon.svg" id="layer-btn" class="icon bottom-left" />
+  <img src="assets/gps-icon.svg" id="locate-btn" class="icon bottom-left second" />
 
   <!-- Search Box -->
-  <div id="search-box" class="panel">
-    <input type="text" id="search-input" placeholder="Search places..." />
-    <button id="search-button">Search</button>
-    <button id="close-search">✕</button>
+  <div id="search-box" class="box">
+    <input type="text" id="search-input" placeholder="Search a place..." />
+    <div class="buttons">
+      <button id="search-button">Search</button>
+      <button id="close-search">Close</button>
+    </div>
   </div>
 
   <!-- Direction Box -->
-  <div id="direction-box" class="panel">
+  <div id="direction-box" class="box">
     <input type="text" id="from" placeholder="From" />
     <input type="text" id="to" placeholder="To" />
-    <button id="get-direction">Go</button>
-    <button id="close-direction">✕</button>
+    <div class="buttons">
+      <button id="get-direction">Get Direction</button>
+      <button id="close-direction">Close</button>
+    </div>
   </div>
 
-  <!-- Layer Popup -->
-  <div id="layer-popup">
-    <div class="layer-option" data-style="streets-v2">🗺️ Street</div>
-    <div class="layer-option" data-style="satellite-v2">🌎 Satellite</div>
-    <div class="layer-option" data-style="hybrid">🛰️ Hybrid</div>
+  <!-- Layer Switcher -->
+  <div id="layer-popup" class="popup">
+    <div class="layer-option" data-style="streets-v2">🛣️ Street</div>
+    <div class="layer-option" data-style="satellite-v2">🛰️ Satellite</div>
+    <div class="layer-option" data-style="hybrid">🌍 Hybrid</div>
   </div>
 
   <script src="script.js"></script>
