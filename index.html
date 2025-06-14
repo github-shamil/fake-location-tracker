@@ -1,48 +1,55 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Advanced Fake Location Tracker</title>
+  <title>Fake Location Tracker</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <link rel="icon" href="assets/map-icon.svg" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
 </head>
 <body>
-  <div id="map"></div>  <!-- Floating Icons -->  <div class="floating-icons">
-    <img src="assets/layers-icon.svg" id="mapTypeToggle" title="Map Type" />
-    <img src="assets/live-location.svg" id="locateMe" title="Current Location" />
-  </div>  <!-- Zoom Controls -->  <div class="zoom-controls">
-    <button id="zoomIn">+</button>
-    <button id="zoomOut">-</button>
-  </div>  <!-- Search Panel -->  <div class="search-container" id="searchPanel">
-    <img src="assets/search-icon.svg" class="search-toggle" id="searchToggle" />
-    <div class="search-box" id="searchBox">
-      <input type="text" id="placeInput" placeholder="Search here..." />
-      <button id="searchBtn">Search</button>
-      <img src="assets/close-icon.svg" id="closeSearch" class="close-btn" />
-    </div>
-  </div>  <!-- Direction Panel -->  <div class="direction-container" id="directionPanel">
-    <img src="assets/direction-icon.svg" class="direction-toggle" id="directionToggle" />
-    <div class="direction-box" id="directionBox">
-      <input type="text" id="start" placeholder="Your location" />
-      <input type="text" id="end" placeholder="Choose destination" />
-      <div class="transport-icons">
-        <img src="assets/car.svg" id="car" />
-        <img src="assets/bike.svg" id="bike" />
-        <img src="assets/train.svg" id="train" />
-        <img src="assets/walk.svg" id="walk" />
-      </div>
-      <button id="getDirection">Get Direction</button>
-      <img src="assets/close-icon.svg" id="closeDirection" class="close-btn" />
-    </div>
-  </div>  <!-- Map Type Popup -->  <div class="map-type-popup" id="mapTypePopup">
-    <div class="map-option" data-type="default">Default</div>
-    <div class="map-option" data-type="satellite">Satellite</div>
-    <div class="map-option" data-type="terrain">Terrain</div>
-    <div class="map-option" data-type="traffic">Traffic</div>
-    <div class="map-option" data-type="transit">Public Transport</div>
-    <div class="map-option" data-type="weather">Weather</div>
-  </div>  <script src="script.js"></script></body>
+  <div id="map"></div>
+
+  <!-- Search Icon -->
+  <img src="assets/search-icon.svg" id="search-icon" class="map-icon" />
+
+  <!-- Search Box -->
+  <div id="search-box" class="box">
+    <input type="text" id="search-input" placeholder="Search place..." />
+    <button id="search-button">Search</button>
+    <button id="close-search">✕</button>
+  </div>
+
+  <!-- Direction Icon -->
+  <img src="assets/direction-icon.svg" id="direction-icon" class="map-icon" />
+
+  <!-- Direction Box -->
+  <div id="direction-box" class="box">
+    <input type="text" id="from" placeholder="Start" />
+    <input type="text" id="to" placeholder="Destination" />
+    <button id="get-direction">Get Direction</button>
+    <button id="close-direction">✕</button>
+  </div>
+
+  <!-- Locate Icon -->
+  <img src="assets/location-icon.svg" id="locate-btn" class="map-icon" />
+
+  <!-- Map Layer Icon -->
+  <img src="assets/layer-icon.svg" id="layer-btn" class="map-icon" />
+
+  <!-- Map Layer Popup -->
+  <div id="layer-popup" class="popup">
+    <div class="layer-option" data-style="streets-v2">Streets</div>
+    <div class="layer-option" data-style="satellite">Satellite</div>
+    <div class="layer-option" data-style="hybrid">Hybrid</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
 </html>
