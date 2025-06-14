@@ -1,67 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Live Location</title>
-
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-sA+e2jAY5IJXbHURy+2oU/aqS4Uv0XtquhZ9f7tWgw0="
-    crossorigin=""
-  />
-
-  <!-- Leaflet Routing Machine -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"
-  />
-
-  <!-- Custom CSS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake Location Tracker</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 </head>
-<body>
-
-  <!-- Map -->
-  <div id="map"></div>
-
-  <!-- 🔍 Search Toggle Icon -->
-  <img src="assets/search-icon.svg" class="icon search-toggle" alt="Search" />
-
-  <!-- 🧭 Direction Toggle Icon -->
-  <img src="assets/direction-icon.svg" class="icon direction-toggle" alt="Directions" />
-
-  <!-- 🔍 Floating Search Box -->
-  <div class="floating-search hidden">
-    <input type="text" id="search-input" placeholder="Search location..." autocomplete="off"/>
-    <div id="search-suggestions" class="suggestion-box"></div>
-    <button onclick="searchLocation()">Search</button>
-  </div>
-
-  <!-- 🧭 Floating Direction Box -->
-  <div class="floating-direction hidden" id="direction-panel">
-    <input type="text" id="start" placeholder="Start location" autocomplete="off"/>
-    <div id="start-suggestions" class="suggestion-box"></div>
-
-    <input type="text" id="end" placeholder="Destination" autocomplete="off"/>
-    <div id="end-suggestions" class="suggestion-box"></div>
-
+<body class="light-mode">
+  <div id="map"></div>  <!-- Floating Icons -->  <div class="floating-controls">
+    <img src="assets/search-icon.svg" id="search-toggle" alt="Search" />
+    <img src="assets/direction-icon.svg" id="direction-toggle" alt="Direction" />
+    <img src="assets/layer-icon.svg" id="layer-toggle" alt="Layer" />
+    <img src="assets/traffic-icon.svg" id="traffic-toggle" alt="Traffic" />
+    <img src="assets/weather-icon.svg" id="weather-toggle" alt="Weather" />
+    <img src="assets/location-icon.svg" id="location-toggle" alt="My Location" />
+    <img src="assets/theme-icon.svg" id="theme-toggle" alt="Theme" />
+  </div>  <!-- Floating Search -->  <div class="floating-search">
+    <input id="searchBox" placeholder="Search a place..." autocomplete="off" />
+    <div id="searchSuggestions" class="suggestion-box"></div>
+    <button onclick="searchPlace()">Search</button>
+  </div>  <!-- Direction Panel -->  <div id="direction-panel" class="panel">
+    <button class="close-btn" onclick="closeDirectionPanel()">&times;</button>
+    <input id="start" placeholder="Start" autocomplete="off" />
+    <div id="startSuggestions" class="suggestion-box"></div>
+    <input id="end" placeholder="Destination" autocomplete="off" />
+    <div id="endSuggestions" class="suggestion-box"></div>
     <button onclick="getDirections()">Get Directions</button>
-  </div>
-
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-GZC+oM38XRboZKOKL2xzCugtbC6DgCTrsMRN3h4mCkE="
-    crossorigin=""
-  ></script>
-
-  <!-- Leaflet Routing -->
-  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-
-  <!-- Main JS -->
-  <script src="script.js"></script>
-</body>
+    <div id="routeSummary"></div>
+  </div>  <!-- Weather Box -->  <div id="weather-box" class="panel">
+    <div id="weatherTemp">--</div>
+    <div id="weatherCondition">Loading...</div>
+    <div id="weatherDetails"></div>
+  </div>  <!-- History Panel -->  <div id="history-panel" class="panel">
+    <button class="close-btn" onclick="hidePanel('history-panel')">&times;</button>
+    <ul id="historyList"></ul>
+  </div>  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>  <script src="script.js"></script></body>
 </html>
